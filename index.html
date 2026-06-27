@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Aktivitetslogg</title>
+<script>
+// Körs DIREKT — innan allt annat — fångar token från URL-fragmentet
+(function(){
+  const hash = location.hash;
+  if(hash && hash.includes("access_token")){
+    const p = new URLSearchParams(hash.slice(1));
+    const token = p.get("access_token");
+    if(token){
+      localStorage.setItem("akt_token", token);
+      // Rensa URL utan att ladda om sidan
+      history.replaceState(null, "", location.pathname);
+    }
+  }
+})();
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0f0f13;color:#e8e6e0;font-family:system-ui,sans-serif;min-height:100vh;}
+.wrap{max-width:480px;margin:0 auto;padding-bottom:80px;}
+.hdr{padding:20px 16px 12px;border-bottom:1px solid #1e1e28;display:flex;align-items:center;gap:10px;}
+.hdr-info{flex:1;}
+.hdr-lbl{font-size:11px;letter-spacing:2px;color:#6b6880;text-transform:uppercase;margin-bottom:2px;}
+.hdr-title{font-size:22px;font-weight:600;color:#e8e6e0;}
+.sync-btn{padding:7px 13px;border-radius:20px;border:1px solid #2a2a38;background:#1a1a24;color:#888;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.sync-btn.ok{border-color:#2a4a2a;background:#1a2a1a;color:#4ade80;}
+.sync-btn.err{border-color:#4a1a1a;background:#2a1a1a;color:#f87171;}
+.user-row{padding:8px 16px;background:#1a1a24;border-bottom:1px solid #1e1e28;display:flex;align-items:center;gap:8px;font-size:12px;color:#6b6880;}
+.avatar{width:22px;height:22px;border-radius:50%;background:#2a2040;display:flex;align-items:center;justify-content:center;color:#a78bfa;font-size:11px;font-weight:600;}
+.signout{margin-left:auto;color:#4a4860;cursor:pointer;font-size:11px;text-decoration:underline;}
+.login-screen{padding:60px 24px;text-align:center;}
+.login-icon{font-size:52px;margin-bottom:20px;}
+.login-title{font-size:22px;font-weight:600;color:#e8e6e0;margin-bottom:10px;}
+.login-sub{font-size:14px;color:#6b6880;line-height:1.6;margin-bottom:36px;}
+.login-btn{display:inline-flex;align-items:center;gap:10px;padding:13px 24px;border-radius:12px;background:#fff;border:none;color:#1f1f1f;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;}
+.login-btn svg{width:20px;height:20px;flex-shrink:0;}
+.tabs{display:flex;border-bottom:1px solid #1e1e28;overflow-x:auto;}
+.tab{flex:1;min-width:56px;padding:12px 4px;background:none;border:none;border-bottom:2px solid transparent;color:#6b6880;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s;}
+.tab.on{color:#a78bfa;font-weight:600;border-bottom-color:#a78bfa;}
+.body{padding:16px;}
+.lbl{font-size:11px;color:#6b6880;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.chip{padding:7px 13px;border-radius:20px;border:1px solid #2a2a38;background:#1a1a24;color:#888;font-size:12px;cursor:pointer;font-family:inherit;}
+.chip.on{background:#a78bfa;color:#fff;border-color:#a78bfa;font-weight:600;}
+.qrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.qbtn{padding:9px 14px;border-radius:10px;background:#1a1a24;border:1px solid #2a2a38;color:#c4c0d4;font-size:13px;cursor:pointer;font-family:inherit;}
+.row{display:flex;gap:8px;margin-bottom:10px;}
+.inp{flex:1;padding:11px 13px;border-radius:10px;background:#1a1a24;border:1px solid #2a2a38;color:#e8e6e0;font-size:14px;outline:none;font-family:inherit;}
+.inp::placeholder{color:#4a4860;}
+.inp:focus{border-color:#a78bfa;}
+.inp.w100{width:100%;flex:none;}
+.abtn{padding:11px 18px;border-radius:10px;background:#a78bfa;border:none;color:#fff;font-weight:600;font-size:18px;cursor:pointer;}
+.ok-toast{margin-top:12px;padding:11px 14px;border-radius:10px;background:#1a2a1a;border:1px solid #2a4a2a;color:#4ade80;font-size:13px;text-align:center;animation:fi .2s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.srow{display:flex;align-items:center;gap:10px;padding:10px 13px;background:#1a1a24;border-radius:10px;margin-bottom:6px;border:1px solid #1e1e28;}
+.sbadge{font-size:11px;padding:3px 10px;border-radius:20px;background:#2a2040;color:#a78bfa;font-weight:600;}
+.entry{padding:13px 15px;background:#1a1a24;border-radius:12px;border:1px solid #1e1e28;display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}
+.etitle{font-weight:600;font-size:14px;color:#e8e6e0;}
+.enote{font-size:12px;color:#6b6880;margin-top:2px;}
+.etime{font-size:11px;color:#4a4860;margin-top:3px;}
+.delbtn{background:none;border:none;color:#4a4860;cursor:pointer;font-size:18px;padding:0 2px;line-height:1;}
+.empty{text-align:center;padding:60px 0;color:#6b6880;}
+.eico{font-size:40px;margin-bottom:12px;}
+.tbox{padding:18px;background:#13131d;border-radius:14px;border:1px solid #2a2040;line-height:1.7;font-size:15px;color:#c4c0d4;white-space:pre-wrap;margin-bottom:14px;}
+.spnr{width:32px;height:32px;border-radius:50%;border:3px solid #2a2a38;border-top-color:#a78bfa;animation:spin .8s linear infinite;margin:0 auto;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ta{width:100%;min-height:110px;padding:13px;border-radius:12px;background:#1a1a24;border:1px solid #2a2a38;color:#e8e6e0;font-size:14px;line-height:1.6;resize:vertical;outline:none;font-family:inherit;margin-bottom:10px;}
+.ta:focus{border-color:#a78bfa;}
+.ta::placeholder{color:#4a4860;}
+.ctx-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.ctx-chip{padding:7px 13px;border-radius:20px;border:1px solid #2a2a38;background:#1a1a24;color:#888;font-size:12px;cursor:pointer;font-family:inherit;}
+.ctx-chip.on{background:#2a2040;color:#a78bfa;border-color:#a78bfa;}
+.orig{background:#1a1a24;border-left:3px solid #3a3a50;border-radius:0;padding:11px 13px;font-size:13px;color:#888;line-height:1.5;margin-bottom:16px;font-style:italic;}
+.scard{background:#13131d;border-radius:14px;border:1px solid #2a2040;padding:16px;margin-bottom:10px;}
+.stone{font-size:10px;letter-spacing:2px;color:#6b6880;text-transform:uppercase;margin-bottom:7px;}
+.stext{font-size:14px;color:#e8e6e0;line-height:1.6;margin-bottom:9px;}
+.swhy{font-size:12px;color:#6b6880;line-height:1.5;font-style:italic;}
+.sec{background:#a78bfa;border:none;color:#fff;width:100%;padding:13px;border-radius:12px;font-size:14px;cursor:pointer;font-weight:600;font-family:inherit;margin-top:4px;}
+.sec.ghost{background:#1a1a24;border:1px solid #a78bfa;color:#a78bfa;}
+.mt12{margin-top:12px;}
+.mt20{margin-top:20px;}
+.mt8{margin-top:8px;}
+.bubble-them{background:#1a1a24;border:1px solid #2a2a38;color:#e8e6e0;padding:11px 14px;border-radius:4px 12px 12px 12px;font-size:14px;line-height:1.5;max-width:88%;margin-bottom:4px;}
+.bubble-lbl{font-size:10px;color:#6b6880;margin-bottom:3px;}
+.reply-card{background:#1a1a24;border-radius:12px;border:1px solid #2a2a38;padding:15px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.reply-card:active{border-color:#a78bfa;}
+.reply-tone{font-size:10px;letter-spacing:2px;color:#6b6880;text-transform:uppercase;margin-bottom:6px;}
+.reply-text{font-size:14px;color:#e8e6e0;line-height:1.6;margin-bottom:6px;}
+.reply-why{font-size:12px;color:#6b6880;font-style:italic;}
+.copy-ok{font-size:12px;color:#4ade80;margin-top:5px;display:none;}
+.copy-ok.vis{display:block;}
+.khist{padding:13px 15px;background:#1a1a24;border-radius:12px;border:1px solid #1e1e28;margin-bottom:8px;cursor:pointer;}
+.kmsg{font-size:12px;color:#c4c0d4;line-height:1.4;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kmeta{font-size:10px;color:#4a4860;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.kbadge{padding:2px 8px;border-radius:20px;background:#2a2040;color:#a78bfa;font-size:10px;font-weight:600;}
+.debug{position:fixed;bottom:0;left:0;right:0;background:#1a0a0a;border-top:1px solid #4a1a1a;padding:8px 12px;font-size:11px;color:#f87171;font-family:monospace;word-break:break-all;max-height:80px;overflow-y:auto;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="login-screen" class="login-screen" style="display:none">
+    <div class="login-icon">🔄</div>
+    <div class="login-title">Aktivitetslogg</div>
+    <div class="login-sub">Logga in med Google för att synka dina aktiviteter mellan telefon och dator.</div>
+    <button class="login-btn" onclick="startLogin()">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Logga in med Google
+    </button>
+    <div id="debug-msg" style="margin-top:20px;font-size:12px;color:#6b6880;"></div>
+  </div>
+
+  <div id="main-app" style="display:none">
+    <div class="hdr">
+      <div class="hdr-info">
+        <div class="hdr-lbl">Aktivitetslogg</div>
+        <div class="hdr-title" id="htitle">Kom igång</div>
+      </div>
+      <button class="sync-btn" id="sync-btn" onclick="syncNow()">☁ Synka</button>
+    </div>
+    <div class="user-row" id="user-row"></div>
+    <div class="tabs">
+      <button class="tab on" data-v="log">Logga</button>
+      <button class="tab" data-v="history">Historik</button>
+      <button class="tab" data-v="klarhet">Klarhet</button>
+      <button class="tab" data-v="svar">Svar</button>
+      <button class="tab" data-v="omforma">Omforma</button>
+      <button class="tab" data-v="tips">AI-tips</button>
+    </div>
+    <div class="body" id="body"></div>
+  </div>
+</div>
+
+<script>
+const CLIENT_ID = "801528490569-po9h0jrah67hj3rrpanj0sk25sfkonvm.apps.googleusercontent.com";
+const SCOPE = "https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile";
+const FILE_NAME = "aktivitetslogg_data.json";
+
+// Bygg redirect URI dynamiskt från nuvarande URL
+const REDIRECT_URI = location.origin + location.pathname.replace(/\/+$/, "");
+
+const CATS=[
+  {id:"träning",label:"Träning",e:"🏃"},
+  {id:"mat",label:"Mat & kost",e:"🥗"},
+  {id:"sömn",label:"Sömn",e:"😴"},
+  {id:"mental",label:"Mental hälsa",e:"🧘"},
+  {id:"övrigt",label:"Övrigt",e:"✨"},
+];
+const QUICK={
+  träning:["Löpning","Gympass","Cykling","Yoga","Simning","Promenad"],
+  mat:["Frukost","Lunch","Middag","Mellanmål","Drack 2L vatten"],
+  sömn:["Sov 8h","Sov 6h","Tupplur","Svår natt"],
+  mental:["Meditation","Journaling","Socialt umgänge","Naturvistelse"],
+  övrigt:["Läste bok","Lärde mig något","Kreativt projekt"],
+};
+const CTXS=["Vän","Partner","Familj","Kollega"];
+
+let accessToken=null, userInfo=null, driveFileId=null;
+let logs=[], kHist=[], sHist=[];
+let view="log", cat="träning", tipText="", tipsLoading=false;
+let kCtx="Vän", kResult=null, kLoading=false, kDraft="";
+let sCtx="Vän", sResult=null, sLoading=false, sDraft="", sMyCtx="";
+let oResult=null, oLoading=false, oDraft="", oTone="Vänlig", oTo="Vän", oHist=[];
+
+function fd(iso){return new Date(iso).toLocaleDateString("sv-SE",{weekday:"short",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+function loadLocal(){
+  try{
+    const d=JSON.parse(localStorage.getItem("akt_data")||"{}");
+    logs=d.logs||[]; kHist=d.kHist||[]; sHist=d.sHist||[];
+    driveFileId=localStorage.getItem("drive_fid")||null;
+    const ui=localStorage.getItem("user_info");
+    if(ui) userInfo=JSON.parse(ui);
+  }catch{}
+}
+function saveLocal(){
+  try{localStorage.setItem("akt_data",JSON.stringify({logs,kHist,sHist,oHist}));}catch{}
+}
+
+function startLogin(){
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    redirect_uri: REDIRECT_URI,
+    response_type: "token",
+    scope: SCOPE,
+    include_granted_scopes: "true",
+    prompt: "select_account",
+  });
+  location.href = "https://accounts.google.com/o/oauth2/v2/auth?" + params.toString();
+}
+
+async function init(){
+  loadLocal();
+
+  const savedToken = localStorage.getItem("akt_token");
+  const tokenTime = parseInt(localStorage.getItem("token_time")||"0");
+  const tokenAge = Date.now() - tokenTime;
+
+  if(savedToken && tokenAge < 55*60*1000){
+    accessToken = savedToken;
+    const ok = await checkToken();
+    if(ok){
+      if(!userInfo) await fetchUserInfo();
+      showApp();
+      syncNow();
+      return;
+    }
+  }
+  // Token saknas, för gammal eller ogiltig — rensa och visa login
+  ["akt_token","token_time"].forEach(k=>localStorage.removeItem(k));
+
+  const dbg = document.getElementById("debug-msg");
+  if(dbg) dbg.textContent = "Redirect URI: " + REDIRECT_URI;
+  showLogin();
+}
+
+async function checkToken(){
+  try{
+    const r = await fetch("https://www.googleapis.com/oauth2/v3/tokeninfo?access_token="+accessToken);
+    const d = await r.json();
+    return !d.error;
+  }catch{ return false; }
+}
+
+async function fetchUserInfo(){
+  try{
+    const r = await fetch("https://www.googleapis.com/oauth2/v3/userinfo",{headers:{Authorization:"Bearer "+accessToken}});
+    userInfo = await r.json();
+    localStorage.setItem("user_info", JSON.stringify(userInfo));
+  }catch{}
+}
+
+function showLogin(){
+  document.getElementById("login-screen").style.display="block";
+  document.getElementById("main-app").style.display="none";
+}
+
+function showApp(){
+  localStorage.setItem("akt_token", accessToken);
+  localStorage.setItem("token_time", Date.now());
+  document.getElementById("login-screen").style.display="none";
+  document.getElementById("main-app").style.display="block";
+  renderUserRow();
+  document.querySelectorAll(".tab").forEach(btn=>btn.onclick=()=>{
+    if(btn.dataset.v==="tips"){setView("tips");fetchTips();}
+    else{setView(btn.dataset.v);render();}
+  });
+  // Token går ut efter 1h — logga ut automatiskt efter 58 min
+  setTimeout(()=>{
+    setSyncBtn("err","Session utgången");
+    setTimeout(tokenExpired, 3000);
+  }, 58 * 60 * 1000);
+  render();
+}
+
+function renderUserRow(){
+  const r=document.getElementById("user-row");
+  if(!r||!userInfo)return;
+  const name=userInfo.name||userInfo.email||"Inloggad";
+  const initials=name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+  r.innerHTML=`<div class="avatar">${initials}</div><span style="color:#c4c0d4;font-size:12px">${esc(name)}</span><span class="signout" onclick="signOut()">Logga ut</span>`;
+}
+
+function signOut(){
+  ["akt_token","user_info","drive_fid"].forEach(k=>localStorage.removeItem(k));
+  accessToken=null; userInfo=null; driveFileId=null;
+  showLogin();
+}
+
+function setSyncBtn(cls,label){
+  const b=document.getElementById("sync-btn");
+  if(!b)return;
+  b.className="sync-btn"+(cls?" "+cls:"");
+  b.textContent=label;
+}
+
+function tokenExpired(){
+  // Rensa token och skicka till inloggning med meddelande
+  localStorage.removeItem("akt_token");
+  accessToken=null;
+  document.getElementById("main-app").style.display="none";
+  document.getElementById("login-screen").style.display="block";
+  const dbg=document.getElementById("debug-msg");
+  if(dbg)dbg.innerHTML='<span style="color:#f87171">Sessionen gick ut — logga in igen.</span>';
+}
+
+async function apiFetch(url, opts={}){
+  const r = await fetch(url, opts);
+  if(r.status===401||r.status===403){
+    // Kontrollera om det faktiskt är token-fel
+    try{
+      const clone = r.clone();
+      const d = await clone.json();
+      if(d.error&&(d.error.code===401||d.error.status==="UNAUTHENTICATED"||(d.error.message||"").toLowerCase().includes("invalid"))){
+        tokenExpired();
+        throw new Error("TOKEN_EXPIRED");
+      }
+    }catch(e){ if(e.message==="TOKEN_EXPIRED") throw e; }
+  }
+  return r;
+}
+
+async function syncNow(){
+  if(!accessToken){setSyncBtn("err","Ej inloggad");return;}
+  setSyncBtn("","⟳ Synkar...");
+  try{
+    const remote=await driveRead();
+    if(remote){const m=mergeData(remote);logs=m.logs;kHist=m.kHist;sHist=m.sHist;oHist=m.oHist;}
+    await driveWrite();
+    saveLocal();
+    // Spara synktid
+    localStorage.setItem("last_sync", Date.now());
+    setSyncBtn("ok","✓ Synkad");
+    setTimeout(()=>setSyncBtn("","☁ Synka"),3000);
+    hdr(); render();
+  }catch(e){
+    if(e.message==="TOKEN_EXPIRED") return;
+    setSyncBtn("err","Synk misslyckades");
+    setTimeout(()=>setSyncBtn("","☁ Synka"),3000);
+  }
+}
+
+function mergeData(remote){
+  function mergeArr(a,b){
+    const map=new Map();
+    [...(a||[]),...(b||[])].forEach(x=>map.set(String(x.id||x.timestamp),x));
+    return Array.from(map.values()).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  }
+  return{logs:mergeArr(logs,remote.logs),kHist:mergeArr(kHist,remote.kHist),sHist:mergeArr(sHist,remote.sHist),oHist:mergeArr(oHist,remote.oHist||[])};
+}
+
+async function driveRead(){
+  if(!driveFileId){
+    const r=await apiFetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${FILE_NAME}'&fields=files(id)`,{headers:{Authorization:"Bearer "+accessToken}});
+    const d=await r.json();
+    if(d.files&&d.files.length>0){driveFileId=d.files[0].id;localStorage.setItem("drive_fid",driveFileId);}
+    else return null;
+  }
+  const r=await apiFetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,{headers:{Authorization:"Bearer "+accessToken}});
+  if(!r.ok){driveFileId=null;localStorage.removeItem("drive_fid");return null;}
+  return await r.json();
+}
+
+async function driveWrite(){
+  const body=JSON.stringify({logs,kHist,sHist,oHist});
+  if(driveFileId){
+    await apiFetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`,{method:"PATCH",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body});
+  }else{
+    const form=new FormData();
+    form.append("metadata",new Blob([JSON.stringify({name:FILE_NAME,parents:["appDataFolder"]})],{type:"application/json"}));
+    form.append("file",new Blob([body],{type:"application/json"}));
+    const r=await apiFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",{method:"POST",headers:{Authorization:"Bearer "+accessToken},body:form});
+    const d=await r.json();
+    driveFileId=d.id;
+    localStorage.setItem("drive_fid",driveFileId);
+  }
+}
+
+async function saveAndSync(){
+  saveLocal();
+  try{await driveWrite();setSyncBtn("ok","✓ Sparad");setTimeout(()=>setSyncBtn("","☁ Synka"),2000);}
+  catch{setSyncBtn("err","Synk misslyckades");setTimeout(()=>setSyncBtn("","☁ Synka"),3000);}
+}
+
+function hdr(){document.getElementById("htitle").textContent=logs.length>0?`${logs.length} aktiviteter`:"Kom igång";}
+
+function renderLog(){
+  const b=document.getElementById("body");
+  b.innerHTML=`
+    <div class="lbl">Kategori</div>
+    <div class="chips">${CATS.map(c=>`<button class="chip${c.id===cat?" on":""}" data-cat="${c.id}">${c.e} ${c.label}</button>`).join("")}</div>
+    <div class="lbl">Snabbval</div>
+    <div class="qrow">${QUICK[cat].map(a=>`<button class="qbtn" data-act="${esc(a)}">${esc(a)}</button>`).join("")}</div>
+    <div class="lbl">Egen aktivitet</div>
+    <div class="row"><input class="inp" id="ci" placeholder="Skriv aktivitet..."/><button class="abtn" id="addbtn">+</button></div>
+    <input class="inp w100" id="ni" placeholder="Anteckning (valfritt)..."/>
+    <div id="fz"></div>
+    ${logs.length>0?`<div class="mt20"><div class="lbl">Dina kategorier</div>${CATS.map(c=>{const n=logs.filter(l=>l.category===c.id).length;return n>0?`<div class="srow"><span>${c.e}</span><span style="flex:1;font-size:13px;color:#c4c0d4">${c.label}</span><span class="sbadge">${n}</span></div>`:""}).join("")}</div>`:""}`;
+  b.querySelectorAll(".chip").forEach(btn=>btn.onclick=()=>{cat=btn.dataset.cat;renderLog();});
+  b.querySelectorAll(".qbtn").forEach(btn=>btn.onclick=()=>addAct(btn.dataset.act));
+  const ci=b.querySelector("#ci");
+  ci.onkeydown=e=>{if(e.key==="Enter"&&ci.value.trim())addAct(ci.value.trim());};
+  b.querySelector("#addbtn").onclick=()=>{if(ci.value.trim())addAct(ci.value.trim());};
+}
+
+function addAct(activity){
+  const ni=document.querySelector("#ni");
+  logs.unshift({id:Date.now(),category:cat,activity,note:ni?ni.value:"",timestamp:new Date().toISOString()});
+  saveAndSync();hdr();renderLog();
+  const fz=document.getElementById("fz");
+  if(fz){fz.innerHTML=`<div class="ok-toast">✓ "${esc(activity)}" loggad!</div>`;setTimeout(()=>{if(fz)fz.innerHTML="";},2200);}
+}
+
+function renderHistory(){
+  const b=document.getElementById("body");
+  if(!logs.length){b.innerHTML=`<div class="empty"><div class="eico">📋</div>Inga aktiviteter ännu.</div>`;return;}
+  b.innerHTML=logs.map(log=>{
+    const c=CATS.find(x=>x.id===log.category);
+    return `<div class="entry"><span style="font-size:20px">${c?.e||"✨"}</span><div style="flex:1"><div class="etitle">${esc(log.activity)}</div>${log.note?`<div class="enote">${esc(log.note)}</div>`:""}<div class="etime">${fd(log.timestamp)}</div></div><button class="delbtn" data-id="${log.id}">×</button></div>`;
+  }).join("");
+  b.querySelectorAll(".delbtn").forEach(btn=>btn.onclick=()=>{logs=logs.filter(l=>l.id!==Number(btn.dataset.id));saveAndSync();hdr();renderHistory();});
+}
+
+function renderKlarhet(){
+  const b=document.getElementById("body");
+  if(kLoading){b.innerHTML=`<div style="text-align:center;padding:60px 0"><div class="spnr"></div><div style="color:#6b6880;font-size:13px;margin-top:14px">Analyserar...</div></div>`;return;}
+  if(kResult){
+    b.innerHTML=`<div class="lbl">Ditt meddelande</div><div class="orig">${esc(kResult.original)}</div><div class="lbl">Tydligare formuleringar</div>${kResult.suggestions.map((s,i)=>`<div class="scard"><div class="stone">Förslag ${i+1} · ${esc(s.tone)}</div><div class="stext">${esc(s.text)}</div>${s.why?`<div class="swhy">💡 ${esc(s.why)}</div>`:""}</div>`).join("")}<button class="sec ghost mt12" id="nybtn">Analysera nytt meddelande</button>`;
+    b.querySelector("#nybtn").onclick=()=>{kResult=null;kDraft="";renderKlarhet();}; return;
+  }
+  b.innerHTML=`<div class="lbl">Till vem?</div><div class="ctx-chips">${CTXS.map(c=>`<button class="ctx-chip${c===kCtx?" on":""}" data-ctx="${c}">${c}</button>`).join("")}</div><div class="lbl">Ditt meddelande</div><textarea class="ta" id="kta" placeholder="Klistra in meddelandet du vill göra tydligare...">${esc(kDraft)}</textarea><button class="sec" id="anabtn">Analysera →</button>${kHist.length>0?`<div class="mt20"><div class="lbl">Tidigare analyser</div>${kHist.slice(0,4).map((h,i)=>`<div class="khist" data-idx="${i}"><div class="kmsg">${esc(h.original)}</div><div class="kmeta"><span class="kbadge">${esc(h.context)}</span><span>${fd(h.timestamp)}</span></div></div>`).join("")}</div>`:""}`;
+  b.querySelectorAll(".ctx-chip").forEach(btn=>btn.onclick=()=>{kCtx=btn.dataset.ctx;b.querySelectorAll(".ctx-chip").forEach(x=>x.classList.toggle("on",x.dataset.ctx===kCtx));});
+  const ta=b.querySelector("#kta"); if(ta)ta.oninput=()=>{kDraft=ta.value;};
+  b.querySelector("#anabtn").onclick=()=>{const txt=b.querySelector("#kta").value.trim();if(!txt)return;kDraft=txt;analyseKlarhet(txt);};
+  b.querySelectorAll(".khist").forEach(el=>el.onclick=()=>{kResult=kHist[Number(el.dataset.idx)];renderKlarhet();});
+}
+
+async function analyseKlarhet(text){
+  kLoading=true;renderKlarhet();
+  const sys=`Du är en kommunikationscoach som hjälper folk formulera sig tydligare till ${kCtx.toLowerCase()}. Svara BARA med giltig JSON: {"suggestions":[{"tone":"Rakt på sak","text":"...","why":"..."},{"tone":"Mjukare","text":"...","why":"..."},{"tone":"Kortfattat","text":"...","why":"..."}]}`;
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system:sys,messages:[{role:"user",content:`Originalmeddelande:\n"${text}"`}]})});
+    const data=await res.json();
+    const parsed=JSON.parse((data.content?.map(b=>b.text||"").join("")||"{}").replace(/```json|```/g,"").trim());
+    kResult={id:Date.now(),original:text,context:kCtx,suggestions:parsed.suggestions||[],timestamp:new Date().toISOString()};
+    kHist=[kResult,...kHist].slice(0,20); saveAndSync();
+  }catch{kResult={id:Date.now(),original:text,context:kCtx,timestamp:new Date().toISOString(),suggestions:[{tone:"Fel",text:"Kunde inte analysera. Försök igen.",why:""}]};}
+  kLoading=false; renderKlarhet();
+}
+
+function renderSvar(){
+  const b=document.getElementById("body");
+  if(sLoading){b.innerHTML=`<div style="text-align:center;padding:60px 0"><div class="spnr"></div><div style="color:#6b6880;font-size:13px;margin-top:14px">Tar fram svarsförslag...</div></div>`;return;}
+  if(sResult){
+    b.innerHTML=`<div class="lbl">Deras meddelande</div><div class="bubble-lbl">${esc(sResult.context)}</div><div class="bubble-them">${esc(sResult.original)}</div><div class="lbl mt12">Svarsförslag — tryck för att kopiera</div>${sResult.replies.map((r,i)=>`<div class="reply-card" data-i="${i}"><div class="reply-tone">${esc(r.tone)}</div><div class="reply-text">${esc(r.text)}</div><div class="reply-why">${esc(r.why)}</div><div class="copy-ok" id="cok${i}">✓ Kopierat!</div></div>`).join("")}<button class="sec ghost mt12" id="nysvar">Nytt meddelande</button>`;
+    b.querySelectorAll(".reply-card").forEach(card=>{
+      card.onclick=()=>{
+        const txt=sResult.replies[Number(card.dataset.i)].text;
+        if(navigator.clipboard)navigator.clipboard.writeText(txt).catch(()=>{});
+        else{const t=document.createElement("textarea");t.value=txt;document.body.appendChild(t);t.select();document.execCommand("copy");document.body.removeChild(t);}
+        const ok=document.getElementById("cok"+card.dataset.i);
+        if(ok){ok.classList.add("vis");setTimeout(()=>ok.classList.remove("vis"),2000);}
+      };
+    });
+    b.querySelector("#nysvar").onclick=()=>{sResult=null;sDraft="";sMyCtx="";renderSvar();}; return;
+  }
+  b.innerHTML=`<div class="lbl">Från vem?</div><div class="ctx-chips">${CTXS.map(c=>`<button class="ctx-chip${c===sCtx?" on":""}" data-ctx="${c}">${c}</button>`).join("")}</div><div class="lbl">Deras meddelande</div><textarea class="ta" id="smsg" placeholder="Klistra in meddelandet du fått..." style="min-height:100px">${esc(sDraft)}</textarea><div class="lbl mt8">Vad vill du förmedla? (valfritt)</div><textarea class="ta" id="sctx" placeholder="T.ex. vill tacka nej men ändå vara varm..." style="min-height:70px">${esc(sMyCtx)}</textarea><button class="sec" id="svarbtn">Ge mig svarsförslag →</button>${sHist.length>0?`<div class="mt20"><div class="lbl">Tidigare svar</div>${sHist.slice(0,4).map((h,i)=>`<div class="khist" data-sidx="${i}"><div class="kmsg">${esc(h.original)}</div><div class="kmeta"><span class="kbadge">${esc(h.context)}</span><span>${fd(h.timestamp)}</span><span>${h.replies.length} förslag</span></div></div>`).join("")}</div>`:""}`;
+  b.querySelectorAll(".ctx-chip").forEach(btn=>btn.onclick=()=>{sCtx=btn.dataset.ctx;b.querySelectorAll(".ctx-chip").forEach(x=>x.classList.toggle("on",x.dataset.ctx===sCtx));});
+  const ta=b.querySelector("#smsg"),tc=b.querySelector("#sctx");
+  if(ta)ta.oninput=()=>{sDraft=ta.value;}; if(tc)tc.oninput=()=>{sMyCtx=tc.value;};
+  b.querySelector("#svarbtn").onclick=()=>{const msg=b.querySelector("#smsg").value.trim();if(!msg)return;sDraft=msg;sMyCtx=b.querySelector("#sctx").value.trim();fetchSvar(sDraft,sMyCtx);};
+  b.querySelectorAll("[data-sidx]").forEach(el=>el.onclick=()=>{sResult=sHist[Number(el.dataset.sidx)];renderSvar();});
+}
+
+async function fetchSvar(msg,myIntent){
+  sLoading=true;renderSvar();
+  const sys=`Du är en kommunikationscoach som hjälper folk svara på meddelanden från ${sCtx.toLowerCase()}. Svara BARA med giltig JSON: {"replies":[{"tone":"Varm och personlig","text":"...","why":"..."},{"tone":"Tydlig och direkt","text":"...","why":"..."},{"tone":"Kortfattad","text":"...","why":"..."},{"tone":"Lekfull","text":"...","why":"..."}]}`;
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1200,system:sys,messages:[{role:"user",content:`Deras meddelande:\n"${msg}"${myIntent?`\nVad jag vill förmedla: "${myIntent}"`:""}` }]})});
+    const data=await res.json();
+    const parsed=JSON.parse((data.content?.map(b=>b.text||"").join("")||"{}").replace(/```json|```/g,"").trim());
+    sResult={id:Date.now(),original:msg,context:sCtx,intent:myIntent,replies:parsed.replies||[],timestamp:new Date().toISOString()};
+    sHist=[sResult,...sHist].slice(0,20); saveAndSync();
+  }catch{sResult={id:Date.now(),original:msg,context:sCtx,intent:myIntent,timestamp:new Date().toISOString(),replies:[{tone:"Fel",text:"Kunde inte generera svar. Försök igen.",why:""}]};}
+  sLoading=false; renderSvar();
+}
+
+function renderTips(){
+  const b=document.getElementById("body");
+  if(tipsLoading){b.innerHTML=`<div style="text-align:center;padding:60px 0"><div class="spnr"></div><div style="color:#6b6880;font-size:13px;margin-top:14px">Analyserar...</div></div>`;return;}
+  if(tipText){b.innerHTML=`<div class="lbl">Personliga tips</div><div class="tbox">${esc(tipText)}</div><button class="sec ghost" id="refbtn">Hämta nya tips</button>`;b.querySelector("#refbtn").onclick=fetchTips;return;}
+  b.innerHTML=`<div class="empty"><div class="eico">🤖</div><div style="margin-bottom:20px;font-size:14px">AI-coachen analyserar dina aktiviteter och ger personliga råd.</div><button class="sec" id="getbtn" style="max-width:220px;margin:0 auto">Hämta mina tips</button></div>`;
+  b.querySelector("#getbtn").onclick=fetchTips;
+}
+
+async function fetchTips(){
+  tipsLoading=true;tipText="";setView("tips");renderTips();
+  const sum=logs.slice(0,20).map(l=>`[${l.category}] ${l.activity}${l.note?": "+l.note:""}`).join("\n")||"Inga aktiviteter loggade ännu.";
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system:"Du är en vänlig hälsocoach som ger personliga, konkreta tips på svenska. Håll det kort, positivt och actionbart.",messages:[{role:"user",content:`Ge mig 3 personliga tips baserade på:\n\n${sum}`}]})});
+    const data=await res.json();
+    tipText=data.content?.map(b=>b.text||"").join("")||"Kunde inte hämta tips.";
+  }catch{tipText="Något gick fel. Försök igen.";}
+  tipsLoading=false; renderTips();
+}
+
+const OTONES=["Vänlig","Professionell","Direkt","Empatisk","Lekfull"];
+const OTOS=["Vän","Partner","Familj","Kollega"];
+
+function renderOmforma(){
+  const b=document.getElementById("body");
+  if(oLoading){b.innerHTML=`<div style="text-align:center;padding:60px 0"><div class="spnr"></div><div style="color:#6b6880;font-size:13px;margin-top:14px">Formulerar texten...</div></div>`;return;}
+  if(oResult){
+    b.innerHTML=`<div class="lbl">Din idé</div><div class="orig">${esc(oResult.idea)}</div><div class="lbl">Förslag — tryck för att kopiera</div>${oResult.suggestions.map((s,i)=>`<div class="scard" style="cursor:pointer" data-oi="${i}"><div class="stone">Förslag ${i+1} · ${esc(s.tone)}</div><div class="stext">${esc(s.text)}</div><div class="swhy">💡 ${esc(s.why)}</div><div class="copy-ok" id="ocok${i}">✓ Kopierat!</div></div>`).join("")}<button class="sec ghost mt12" id="onytt">Formulera något nytt</button>`;
+    b.querySelectorAll("[data-oi]").forEach(card=>{card.onclick=()=>{const txt=oResult.suggestions[Number(card.dataset.oi)].text;if(navigator.clipboard)navigator.clipboard.writeText(txt).catch(()=>{});else{const t=document.createElement("textarea");t.value=txt;document.body.appendChild(t);t.select();document.execCommand("copy");document.body.removeChild(t);}const ok=document.getElementById("ocok"+card.dataset.oi);if(ok){ok.classList.add("vis");setTimeout(()=>ok.classList.remove("vis"),2000);}};});
+    b.querySelector("#onytt").onclick=()=>{oResult=null;oDraft="";renderOmforma();};
+    return;
+  }
+  b.innerHTML=`<div class="lbl">Till vem?</div><div class="ctx-chips">${OTOS.map(c=>`<button class="ctx-chip${c===oTo?" on":""}" data-to="${c}">${c}</button>`).join("")}</div><div class="lbl">Ton</div><div class="ctx-chips">${OTONES.map(t=>`<button class="ctx-chip${t===oTone?" on":""}" data-tone="${t}">${t}</button>`).join("")}</div><div class="lbl">Beskriv vad du vill säga</div><textarea class="ta" id="ota" placeholder="T.ex. vill be om ursäkt för att jag missade mötet och föreslå en ny tid...">${esc(oDraft)}</textarea><button class="sec" id="ofetch">Ge mig formuleringar →</button>${oHist.length>0?`<div class="mt20"><div class="lbl">Tidigare</div>${oHist.slice(0,4).map((h,i)=>`<div class="khist" data-oidx="${i}"><div class="kmsg">${esc(h.idea)}</div><div class="kmeta"><span class="kbadge">${esc(h.to)}</span><span class="kbadge">${esc(h.tone)}</span><span>${fd(h.timestamp)}</span></div></div>`).join("")}</div>`""}`;
+  b.querySelectorAll("[data-to]").forEach(btn=>btn.onclick=()=>{oTo=btn.dataset.to;b.querySelectorAll("[data-to]").forEach(x=>x.classList.toggle("on",x.dataset.to===oTo));});
+  b.querySelectorAll("[data-tone]").forEach(btn=>btn.onclick=()=>{oTone=btn.dataset.tone;b.querySelectorAll("[data-tone]").forEach(x=>x.classList.toggle("on",x.dataset.tone===oTone));});
+  const ta=b.querySelector("#ota");if(ta)ta.oninput=()=>{oDraft=ta.value;};
+  b.querySelector("#ofetch").onclick=()=>{const txt=b.querySelector("#ota").value.trim();if(!txt)return;oDraft=txt;fetchOmforma(txt);};
+  b.querySelectorAll("[data-oidx]").forEach(el=>el.onclick=()=>{oResult=oHist[Number(el.dataset.oidx)];renderOmforma();});
+}
+
+async function fetchOmforma(idea){
+  oLoading=true;renderOmforma();
+  const sys=`Du är en kommunikationscoach som hjälper folk formulera meddelanden till ${oTo.toLowerCase()}.
+Ton: ${oTone}.
+Svara BARA med giltig JSON utan backticks:
+{"suggestions":[{"tone":"Alternativ 1","text":"...","why":"..."},{"tone":"Alternativ 2","text":"...","why":"..."},{"tone":"Kortfattad","text":"...","why":"..."}]}
+Varje text = ett komplett välformulerat meddelande på svenska. why = vad som är bra med formuleringen (max 1 mening).`;
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1200,system:sys,messages:[{role:"user",content:`Idé:
+"${idea}"`}]}),});
+    const data=await res.json();
+    const parsed=JSON.parse((data.content?.map(b=>b.text||"").join("")||"{}").replace(/```json|```/g,"").trim());
+    oResult={id:Date.now(),idea,to:oTo,tone:oTone,suggestions:parsed.suggestions||[],timestamp:new Date().toISOString()};
+    oHist=[oResult,...oHist].slice(0,20);saveAndSync();
+  }catch{oResult={id:Date.now(),idea,to:oTo,tone:oTone,timestamp:new Date().toISOString(),suggestions:[{tone:"Fel",text:"Kunde inte generera. Försök igen.",why:""}]};}
+  oLoading=false;renderOmforma();
+}
+
+function setView(v){view=v;document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.v===v));}
+function render(){hdr();if(view==="log")renderLog();else if(view==="history")renderHistory();else if(view==="klarhet")renderKlarhet();else if(view==="svar")renderSvar();else if(view==="omforma")renderOmforma();else if(view==="tips")renderTips();}
+
+init();
+</script>
+</body>
+</html>
