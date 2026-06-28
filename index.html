@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Aktivitetslogg</title>
+<script>
+(function(){
+  var h=location.hash;
+  if(h&&h.includes("access_token")){
+    var p=new URLSearchParams(h.slice(1));
+    var t=p.get("access_token");
+    if(t){localStorage.setItem("akt_token",t);localStorage.setItem("token_time",Date.now());history.replaceState(null,"",location.pathname);}
+  }
+})();
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0f0f13;color:#e8e6e0;font-family:system-ui,sans-serif;min-height:100vh;}
+.wrap{max-width:480px;margin:0 auto;padding-bottom:80px;}
+.hdr{padding:20px 16px 12px;border-bottom:1px solid #1e1e28;display:flex;align-items:center;gap:10px;}
+.hdr-info{flex:1;}
+.hdr-lbl{font-size:11px;letter-spacing:2px;color:#6b6880;text-transform:uppercase;margin-bottom:2px;}
+.hdr-title{font-size:22px;font-weight:600;color:#e8e6e0;}
+.sync-btn{padding:7px 13px;border-radius:20px;border:1px solid #2a2a38;background:#1a1a24;color:#888;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.sync-btn.ok{border-color:#2a4a2a;background:#1a2a1a;color:#4ade80;}
+.sync-btn.err{border-color:#4a1a1a;background:#2a1a1a;color:#f87171;}
+.user-row{padding:8px 16px;background:#1a1a24;border-bottom:1px solid #1e1e28;display:flex;align-items:center;gap:8px;font-size:12px;}
+.avatar{width:22px;height:22px;border-radius:50%;background:#2a2040;display:flex;align-items:center;justify-content:center;color:#a78bfa;font-size:11px;font-weight:600;}
+.signout{margin-left:auto;color:#4a4860;cursor:pointer;font-size:11px;text-decoration:underline;}
+.login-screen{padding:60px 24px;text-align:center;}
+.login-icon{font-size:52px;margin-bottom:20px;}
+.login-title{font-size:22px;font-weight:600;color:#e8e6e0;margin-bottom:10px;}
+.login-sub{font-size:14px;color:#6b6880;line-height:1.6;margin-bottom:36px;}
+.login-btn{display:inline-flex;align-items:center;gap:10px;padding:13px 24px;border-radius:12px;background:#fff;border:none;color:#1f1f1f;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;}
+.login-btn svg{width:20px;height:20px;flex-shrink:0;}
+.tabs{display:flex;border-bottom:1px solid #1e1e28;overflow-x:auto;}
+.tab{flex:1;min-width:48px;padding:12px 4px;background:none;border:none;border-bottom:2px solid transparent;color:#6b6880;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s;}
+.tab.on{color:#a78bfa;font-weight:600;border-bottom-color:#a78bfa;}
+.body{padding:16px;}
+.lbl{font-size:11px;color:#6b6880;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.chip{padding:7px 13px;border-radius:20px;border:1px solid #2a2a38;background:#1a1a24;color:#888;font-size:12px;cursor:pointer;font-family:inherit;}
+.chip.on{background:#a78bfa;color:#fff;border-color:#a78bfa;font-weight:600;}
+.qrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.qbtn{padding:9px 14px;border-radius:10px;background:#1a1a24;border:1px solid #2a2a38;color:#c4c0d4;font-size:13px;cursor:pointer;font-family:inherit;}
+.row{display:flex;gap:8px;margin-bottom:10px;}
+.inp{flex:1;padding:11px 13px;border-radius:10px;background:#1a1a24;border:1px solid #2a2a38;color:#e8e6e0;font-size:14px;outline:none;font-family:inherit;}
+.inp::placeholder{color:#4a4860;}
+.inp:focus{border-color:#a78bfa;}
+.inp.w100{width:100%;flex:none;}
+.abtn{padding:11px 18px;border-radius:10px;background:#a78bfa;border:none;color:#fff;font-weight:600;font-size:18px;cursor:pointer;}
+.ok-toast{margin-top:12px;padding:11px 14px;border-radius:10px;background:#1a2a1a;border:1px solid #2a4a2a;color:#4ade80;font-size:13px;text-align:center;animation:fi .2s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.srow{display:flex;align-items:center;gap:10px;padding:10px 13px;background:#1a1a24;border-radius:10px;margin-bottom:6px;border:1px solid #1e1e28;}
+.sbadge{font-size:11px;padding:3px 10px;border-radius:20px;background:#2a2040;color:#a78bfa;font-weight:600;}
+.entry{padding:13px 15px;background:#1a1a24;border-radius:12px;border:1px solid #1e1e28;display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}
+.etitle{font-weight:600;font-size:14px;color:#e8e6e0;}
+.enote{font-size:12px;color:#6b6880;margin-top:2px;}
+.etime{font-size:11px;color:#4a4860;margin-top:3px;}
+.delbtn{background:none;border:none;color:#4a4860;cursor:pointer;font-size:18px;padding:0 2px;line-height:1;}
+.empty{text-align:center;padding:60px 0;color:#6b6880;}
+.eico{font-size:40px;margin-bottom:12px;}
+.tbox{padding:18px;background:#13131d;border-radius:14px;border:1px solid #2a2040;line-height:1.7;font-size:15px;color:#c4c0d4;white-space:pre-wrap;margin-bottom:14px;}
+.spnr{width:32px;height:32px;border-radius:50%;border:3px solid #2a2a38;border-top-color:#a78bfa;animation:spin .8s linear infinite;margin:0 auto;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ta{width:100%;min-height:110px;padding:13px;border-radius:12px;background:#1a1a24;border:1px solid #2a2a38;color:#e8e6e0;font-size:14px;line-height:1.6;resize:vertical;outline:none;font-family:inherit;margin-bottom:10px;}
+.ta:focus{border-color:#a78bfa;}
+.ta::placeholder{color:#4a4860;}
+.ctx-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.ctx-chip{padding:7px 13px;border-radius:20px;border:1px solid #2a2a38;background:#1a1a24;color:#888;font-size:12px;cursor:pointer;font-family:inherit;}
+.ctx-chip.on{background:#2a2040;color:#a78bfa;border-color:#a78bfa;}
+.orig{background:#1a1a24;border-left:3px solid #3a3a50;border-radius:0;padding:11px 13px;font-size:13px;color:#888;line-height:1.5;margin-bottom:16px;font-style:italic;}
+.scard{background:#13131d;border-radius:14px;border:1px solid #2a2040;padding:16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.scard:active{border-color:#a78bfa;}
+.stone{font-size:10px;letter-spacing:2px;color:#6b6880;text-transform:uppercase;margin-bottom:7px;}
+.stext{font-size:14px;color:#e8e6e0;line-height:1.6;margin-bottom:9px;}
+.swhy{font-size:12px;color:#6b6880;line-height:1.5;font-style:italic;}
+.sec{background:#a78bfa;border:none;color:#fff;width:100%;padding:13px;border-radius:12px;font-size:14px;cursor:pointer;font-weight:600;font-family:inherit;margin-top:4px;}
+.sec.ghost{background:#1a1a24;border:1px solid #a78bfa;color:#a78bfa;}
+.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt20{margin-top:20px;}
+.bubble-them{background:#1a1a24;border:1px solid #2a2a38;color:#e8e6e0;padding:11px 14px;border-radius:4px 12px 12px 12px;font-size:14px;line-height:1.5;max-width:85%;margin-bottom:4px;}
+.bubble-me{background:#2a2040;border:1px solid #a78bfa;color:#e8e6e0;padding:11px 14px;border-radius:12px 4px 12px 12px;font-size:14px;line-height:1.5;max-width:85%;margin-bottom:4px;align-self:flex-end;}
+.bubble-lbl{font-size:10px;color:#6b6880;margin-bottom:3px;}
+.reply-card{background:#1a1a24;border-radius:12px;border:1px solid #2a2a38;padding:15px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.reply-card:active{border-color:#a78bfa;}
+.reply-tone{font-size:10px;letter-spacing:2px;color:#6b6880;text-transform:uppercase;margin-bottom:6px;}
+.reply-text{font-size:14px;color:#e8e6e0;line-height:1.6;margin-bottom:6px;}
+.reply-why{font-size:12px;color:#6b6880;font-style:italic;}
+.copy-ok{font-size:12px;color:#4ade80;margin-top:5px;display:none;}
+.copy-ok.vis{display:block;}
+.khist{padding:13px 15px;background:#1a1a24;border-radius:12px;border:1px solid #1e1e28;margin-bottom:8px;cursor:pointer;}
+.kmsg{font-size:12px;color:#c4c0d4;line-height:1.4;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kmeta{font-size:10px;color:#4a4860;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.kbadge{padding:2px 8px;border-radius:20px;background:#2a2040;color:#a78bfa;font-size:10px;font-weight:600;}
+.mode-btn{padding:12px 8px;border-radius:12px;border:1px solid #2a2a38;background:#1a1a24;color:#888;font-size:13px;cursor:pointer;font-family:inherit;text-align:center;transition:all .15s;}
+.mode-btn.on{border-color:#a78bfa;background:#2a2040;color:#a78bfa;font-weight:600;}
+.mode-desc{font-size:10px;color:#6b6880;margin-top:3px;}
+.chat-area{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;min-height:60px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="login-screen" class="login-screen" style="display:none">
+    <div class="login-icon">🔄</div>
+    <div class="login-title">Aktivitetslogg</div>
+    <div class="login-sub">Logga in med Google för att synka mellan telefon och dator.</div>
+    <button class="login-btn" onclick="startLogin()">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Logga in med Google
+    </button>
+    <div id="debug-msg" style="margin-top:20px;font-size:11px;color:#4a4860;"></div>
+  </div>
+  <div id="main-app" style="display:none">
+    <div class="hdr">
+      <div class="hdr-info">
+        <div class="hdr-lbl">Aktivitetslogg</div>
+        <div class="hdr-title" id="htitle">Kom igang</div>
+      </div>
+      <button class="sync-btn" id="sync-btn" onclick="syncNow()">Synka</button>
+    </div>
+    <div class="user-row" id="user-row"></div>
+    <div class="tabs">
+      <button class="tab on" data-v="log">Logga</button>
+      <button class="tab" data-v="history">Historik</button>
+      <button class="tab" data-v="komm">Skrivhjälp</button>
+      <button class="tab" data-v="forklara">Forklara</button>
+      <button class="tab" data-v="terapi">Terapi</button>
+      <button class="tab" data-v="tips">AI-tips</button>
+    </div>
+    <div class="body" id="body"></div>
+  </div>
+</div>
+<script>
+var PROXY = "https://ai-proxy.jenseskilsson95.workers.dev/";
+var CLIENT_ID = "801528490569-po9h0jrah67hj3rrpanj0sk25sfkonvm.apps.googleusercontent.com";
+var SCOPE = "https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile";
+var FILE_NAME = "aktivitetslogg_data.json";
+var REDIRECT_URI = location.origin + location.pathname.replace(/\/+$/, "/");
+
+var CATS = [
+  {id:"traning",label:"Traning",e:"🏃"},
+  {id:"film",label:"Film",e:"🎬"},
+  {id:"serie",label:"Serie",e:"📺"},
+  {id:"spel",label:"Spel",e:"🎮"},
+  {id:"bok",label:"Bok",e:"📚"},
+  {id:"studerat",label:"Studerat",e:"✏️"},
+  {id:"ovrigt",label:"Ovrigt",e:"✨"}
+];
+var QUICK = {
+  traning:["Lopning","Gympass","Cykling","Simning","Promenad","Stretching"],
+  film:["Action","Komedi","Drama","Thriller","Skrack","Dokumentar"],
+  serie:["Action","Komedi","Drama","Thriller","Anime","Dokusapa"],
+  spel:["PC","Playstation","Xbox","Nintendo","Mobilspel","Brdsspel"],
+  bok:["Skoenlitteratur","Facklitteratur","Thriller","Fantasy","Biografi","Sjalvhjalp"],
+  studerat:["Matematik","Sprak","Programmering","Historia","Naturvetenskap","Annat"],
+  ovrigt:["Kreativt projekt","Social aktivitet","Naturvistelse","Annat"]
+};
+var CTXS = ["Van","Partner","Familj","Kollega"];
+var OTONES = ["Vanlig","Professionell","Direkt","Empatisk","Lekfull"];
+
+var accessToken=null, userInfo=null, driveFileId=null;
+var logs=[], kHist=[], sHist=[], oHist=[], fHist=[], tHist=[];
+var view="log", cat="traning", tipText="", tipsLoading=false, tipTopic="";
+var kommMode="klarhet";
+var kCtx="Van", kResult=null, kLoading=false, kDraft="";
+var sCtx="Van", sResult=null, sLoading=false, sDraft="", sMyCtx="";
+var oCtx="Van", oTone="Vanlig", oResult=null, oLoading=false, oDraft="";
+var fResult=null, fLoading=false, fDraft="";
+var synResult=null, synLoading=false, synDraft="", synHist=[];
+var tMessages=[], tLoading=false, tInput="";
+
+function fd(iso){return new Date(iso).toLocaleDateString("sv-SE",{weekday:"short",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function copyText(txt){
+  if(navigator.clipboard){navigator.clipboard.writeText(txt).catch(function(){});}
+  else{var t=document.createElement("textarea");t.value=txt;document.body.appendChild(t);t.select();document.execCommand("copy");document.body.removeChild(t);}
+}
+function showCopyOk(id){var ok=document.getElementById(id);if(ok){ok.classList.add("vis");setTimeout(function(){ok.classList.remove("vis");},2000);}}
+function spin(){return "<div style='text-align:center;padding:60px 0'><div class='spnr'></div><div style='color:#6b6880;font-size:13px;margin-top:14px'>Arbetar...</div></div>";}
+
+function loadLocal(){
+  try{
+    var d=JSON.parse(localStorage.getItem("akt_data")||"{}");
+    logs=d.logs||[];kHist=d.kHist||[];sHist=d.sHist||[];oHist=d.oHist||[];fHist=d.fHist||[];tHist=d.tHist||[];synHist=d.synHist||[];
+    driveFileId=localStorage.getItem("drive_fid")||null;
+    var ui=localStorage.getItem("user_info");if(ui)userInfo=JSON.parse(ui);
+  }catch(e){}
+}
+function saveLocal(){
+  try{localStorage.setItem("akt_data",JSON.stringify({logs:logs,kHist:kHist,sHist:sHist,oHist:oHist,fHist:fHist,tHist:tHist,synHist:synHist}));}catch(e){}
+}
+function startLogin(){
+  var params=new URLSearchParams({client_id:CLIENT_ID,redirect_uri:REDIRECT_URI,response_type:"token",scope:SCOPE,include_granted_scopes:"true",prompt:"select_account"});
+  location.href="https://accounts.google.com/o/oauth2/v2/auth?"+params.toString();
+}
+async function init(){
+  loadLocal();
+  var savedToken=localStorage.getItem("akt_token");
+  var tokenTime=parseInt(localStorage.getItem("token_time")||"0");
+  if(savedToken&&(Date.now()-tokenTime)<55*60*1000){
+    accessToken=savedToken;
+    var ok=await checkToken();
+    if(ok){if(!userInfo)await fetchUserInfo();showApp();syncNow();return;}
+  }
+  localStorage.removeItem("akt_token");localStorage.removeItem("token_time");
+  var dbg=document.getElementById("debug-msg");
+  if(dbg)dbg.textContent="Redirect URI: "+REDIRECT_URI;
+  showLogin();
+}
+async function checkToken(){
+  try{var r=await fetch("https://www.googleapis.com/oauth2/v3/tokeninfo?access_token="+accessToken);var d=await r.json();return !d.error;}catch(e){return false;}
+}
+async function fetchUserInfo(){
+  try{var r=await fetch("https://www.googleapis.com/oauth2/v3/userinfo",{headers:{Authorization:"Bearer "+accessToken}});userInfo=await r.json();localStorage.setItem("user_info",JSON.stringify(userInfo));}catch(e){}
+}
+function showLogin(){document.getElementById("login-screen").style.display="block";document.getElementById("main-app").style.display="none";}
+function showApp(){
+  localStorage.setItem("akt_token",accessToken);localStorage.setItem("token_time",Date.now());
+  document.getElementById("login-screen").style.display="none";document.getElementById("main-app").style.display="block";
+  renderUserRow();
+  document.querySelectorAll(".tab").forEach(function(btn){
+    btn.onclick=function(){
+      if(btn.dataset.v==="tips"){setView("tips");renderTips();}
+      else{setView(btn.dataset.v);render();}
+    };
+  });
+  setTimeout(function(){setSyncBtn("err","Session utgangen");setTimeout(function(){localStorage.removeItem("akt_token");localStorage.removeItem("token_time");accessToken=null;showLogin();},3000);},58*60*1000);
+  render();
+}
+function renderUserRow(){
+  var r=document.getElementById("user-row");if(!r||!userInfo)return;
+  var name=userInfo.name||userInfo.email||"Inloggad";
+  var initials=name.split(" ").map(function(w){return w[0];}).join("").slice(0,2).toUpperCase();
+  r.innerHTML="<div class='avatar'>"+initials+"</div><span style='color:#c4c0d4;font-size:12px'>"+esc(name)+"</span><span class='signout' onclick='signOut()'>Logga ut</span>";
+}
+function signOut(){["akt_token","token_time","user_info","drive_fid"].forEach(function(k){localStorage.removeItem(k);});accessToken=null;userInfo=null;driveFileId=null;showLogin();}
+function setSyncBtn(cls,label){var b=document.getElementById("sync-btn");if(!b)return;b.className="sync-btn"+(cls?" "+cls:"");b.textContent=label;}
+async function syncNow(){
+  if(!accessToken){setSyncBtn("err","Ej inloggad");return;}
+  setSyncBtn("","Synkar...");
+  try{
+    var remote=await driveRead();
+    if(remote){var m=mergeData(remote);logs=m.logs;kHist=m.kHist;sHist=m.sHist;oHist=m.oHist;fHist=m.fHist;tHist=m.tHist;synHist=m.synHist;}
+    await driveWrite();saveLocal();
+    setSyncBtn("ok","Synkad");setTimeout(function(){setSyncBtn("","Synka");},3000);
+    hdr();render();
+  }catch(e){setSyncBtn("err","Synk misslyckades");setTimeout(function(){setSyncBtn("","Synka");},3000);}
+}
+function mergeData(remote){
+  function mergeArr(a,b){var map=new Map();(a||[]).concat(b||[]).forEach(function(x){map.set(String(x.id||x.timestamp),x);});return Array.from(map.values()).sort(function(a,b){return new Date(b.timestamp)-new Date(a.timestamp);});}
+  return{logs:mergeArr(logs,remote.logs),kHist:mergeArr(kHist,remote.kHist),sHist:mergeArr(sHist,remote.sHist),oHist:mergeArr(oHist,remote.oHist||[]),fHist:mergeArr(fHist,remote.fHist||[]),tHist:mergeArr(tHist,remote.tHist||[]),synHist:mergeArr(synHist,remote.synHist||[])};
+}
+async function driveRead(){
+  if(!driveFileId){var r=await fetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='"+FILE_NAME+"'&fields=files(id)",{headers:{Authorization:"Bearer "+accessToken}});var d=await r.json();if(d.files&&d.files.length>0){driveFileId=d.files[0].id;localStorage.setItem("drive_fid",driveFileId);}else return null;}
+  var r2=await fetch("https://www.googleapis.com/drive/v3/files/"+driveFileId+"?alt=media",{headers:{Authorization:"Bearer "+accessToken}});
+  if(!r2.ok){driveFileId=null;localStorage.removeItem("drive_fid");return null;}
+  return await r2.json();
+}
+async function driveWrite(){
+  var body=JSON.stringify({logs:logs,kHist:kHist,sHist:sHist,oHist:oHist,fHist:fHist,tHist:tHist,synHist:synHist});
+  if(driveFileId){await fetch("https://www.googleapis.com/upload/drive/v3/files/"+driveFileId+"?uploadType=media",{method:"PATCH",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:body});}
+  else{var form=new FormData();form.append("metadata",new Blob([JSON.stringify({name:FILE_NAME,parents:["appDataFolder"]})],{type:"application/json"}));form.append("file",new Blob([body],{type:"application/json"}));var r=await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",{method:"POST",headers:{Authorization:"Bearer "+accessToken},body:form});var d2=await r.json();driveFileId=d2.id;localStorage.setItem("drive_fid",driveFileId);}
+}
+async function saveAndSync(){
+  saveLocal();
+  try{await driveWrite();setSyncBtn("ok","Sparad");setTimeout(function(){setSyncBtn("","Synka");},2000);}
+  catch(e){setSyncBtn("err","Synk misslyckades");setTimeout(function(){setSyncBtn("","Synka");},3000);}
+}
+async function aiCall(system,userMsg,maxTokens){
+  return fetch(PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"anthropic/claude-sonnet-4-5",max_tokens:maxTokens,messages:[{role:"system",content:system},{role:"user",content:userMsg}]})});
+}
+async function aiChat(system,messages,maxTokens){
+  return fetch(PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"anthropic/claude-sonnet-4-5",max_tokens:maxTokens,messages:[{role:"system",content:system}].concat(messages)})});
+}
+function aiText(data){return data.choices&&data.choices[0]?data.choices[0].message.content||"":"";}
+function hdr(){document.getElementById("htitle").textContent=logs.length>0?(logs.length+" aktiviteter"):"Kom igang";}
+function setView(v){view=v;document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("on",t.dataset.v===v);});}
+function render(){
+  hdr();
+  if(view==="log")renderLog();
+  else if(view==="history")renderHistory();
+  else if(view==="komm")renderKomm();
+  else if(view==="forklara")renderForklara();
+  else if(view==="terapi")renderTerapi();
+  else if(view==="tips")renderTips();
+}
+function ctxChips(list,current,attr){
+  return list.map(function(c){return "<button class='ctx-chip"+(c===current?" on":"")+"' data-"+attr+"='"+esc(c)+"'>"+esc(c)+"</button>";}).join("");
+}
+function bindChips(b,attr,getCurrent,setCurrent){
+  b.querySelectorAll("[data-"+attr+"]").forEach(function(btn){btn.onclick=function(){setCurrent(btn.dataset[attr]);b.querySelectorAll("[data-"+attr+"]").forEach(function(x){x.classList.toggle("on",x.dataset[attr]===getCurrent());});};});
+}
+function histRow(h,i,attr,labelHtml){
+  return "<div class='khist' style='display:flex;align-items:flex-start;gap:8px' data-"+attr+"='"+i+"'>"
+    +"<div style='flex:1;min-width:0'><div class='kmsg'>"+esc(h.original||h.idea||h.question||h.summary||"")+"</div>"
+    +"<div class='kmeta'>"+labelHtml+"<span>"+fd(h.timestamp)+"</span></div></div>"
+    +"<button class='delbtn' data-del"+attr+"='"+i+"' style='flex-shrink:0;font-size:18px;padding:0 2px'>x</button>"
+    +"</div>";
+}
+function bindHist(b,attr,clickFn,delFn){
+  b.querySelectorAll("[data-"+attr+"]").forEach(function(el){el.onclick=function(e){if(!e.target.dataset["del"+attr])clickFn(Number(el.dataset[attr]));};});
+  b.querySelectorAll("[data-del"+attr+"]").forEach(function(btn){btn.onclick=function(e){e.stopPropagation();delFn(Number(btn.dataset["del"+attr]));};});
+}
+
+// ---- LOGGA ----
+function renderLog(){
+  var b=document.getElementById("body");
+  var catChips=CATS.map(function(c){return "<button class='chip"+(c.id===cat?" on":"")+"' data-cat='"+c.id+"'>"+c.e+" "+c.label+"</button>";}).join("");
+  var stats="";
+  if(logs.length){stats="<div class='mt20'><div class='lbl'>Kategorier</div>";CATS.forEach(function(c){var n=logs.filter(function(l){return l.category===c.id;}).length;if(n>0)stats+="<div class='srow'><span>"+c.e+"</span><span style='flex:1;font-size:13px;color:#c4c0d4'>"+c.label+"</span><span class='sbadge'>"+n+"</span></div>";});stats+="</div>";}
+  b.innerHTML="<div class='lbl'>Kategori</div><div class='chips'>"+catChips+"</div>"
+    +"<div class='lbl'>Aktivitet</div>"
+    +"<div class='row'><input class='inp' id='ci' placeholder='Vad gjorde du?'/><button class='abtn' id='addbtn'>+</button></div>"
+    +"<div class='lbl'>Tid (valfritt)</div>"
+    +"<input class='inp w100' id='ti' placeholder='T.ex. 45 min, 1h, 19:00-20:30' style='margin-bottom:10px'/>"
+    +"<div class='lbl'>Anteckning (valfritt)</div>"
+    +"<input class='inp w100' id='ni' placeholder='Egna tankar eller kommentarer...'/>"
+    +"<div id='fz'></div>"+stats;
+  b.querySelectorAll(".chip").forEach(function(btn){btn.onclick=function(){cat=btn.dataset.cat;renderLog();};});
+  var ci=b.querySelector("#ci");
+  ci.onkeydown=function(e){if(e.key==="Enter"&&ci.value.trim())addAct(ci.value.trim());};
+  b.querySelector("#addbtn").onclick=function(){if(ci.value.trim())addAct(ci.value.trim());};
+}
+function addAct(activity){
+  var ni=document.querySelector("#ni");
+  var ti=document.querySelector("#ti");
+  var timeVal=ti?ti.value.trim():"";
+  var noteVal=ni?ni.value.trim():"";
+  logs.unshift({id:Date.now(),category:cat,activity:activity,time:timeVal,note:noteVal,timestamp:new Date().toISOString()});
+  saveAndSync();hdr();renderLog();
+  var fz=document.getElementById("fz");
+  if(fz){fz.innerHTML="<div class='ok-toast'>Loggad: "+esc(activity)+"</div>";setTimeout(function(){if(fz)fz.innerHTML="";},2200);}
+}
+
+// ---- HISTORIK ----
+var editingId=null;
+
+function renderHistory(){
+  var b=document.getElementById("body");
+  if(!logs.length){b.innerHTML="<div class='empty'><div class='eico'>📋</div>Inga aktiviteter annu.</div>";return;}
+  b.innerHTML=logs.map(function(log){
+    var c=CATS.find(function(x){return x.id===log.category;});
+    if(editingId===log.id){
+      return "<div class='entry' style='flex-direction:column;gap:10px'>"
+        +"<div style='display:flex;align-items:center;gap:10px'>"
+        +"<span style='font-size:20px'>"+(c?c.e:"✨")+"</span>"
+        +"<div class='etitle' style='flex:1'>"+esc(log.activity)+"</div>"
+        +"</div>"
+        +"<input class='inp w100' id='edit-time-"+log.id+"' placeholder='Tid (t.ex. 45 min)' value='"+esc(log.time||"")+"'/>"
+        +"<input class='inp w100' id='edit-note-"+log.id+"' placeholder='Anteckning...' value='"+esc(log.note||"")+"'/>"
+        +"<div style='display:flex;gap:8px'>"
+        +"<button class='sec' id='save-edit-"+log.id+"' style='flex:1'>Spara</button>"
+        +"<button class='sec ghost' id='cancel-edit-"+log.id+"' style='flex:1'>Avbryt</button>"
+        +"</div>"
+        +"</div>";
+    }
+    return "<div class='entry'>"
+      +"<span style='font-size:20px'>"+(c?c.e:"✨")+"</span>"
+      +"<div style='flex:1'>"
+      +"<div class='etitle'>"+esc(log.activity)+"</div>"
+      +(log.time?"<div class='enote' style='color:#a78bfa'>"+esc(log.time)+"</div>":"")
+      +(log.note?"<div class='enote'>"+esc(log.note)+"</div>":"")
+      +"<div class='etime'>"+fd(log.timestamp)+"</div>"
+      +"</div>"
+      +"<button class='delbtn' data-edit='"+log.id+"' style='color:#6b6880;font-size:14px;padding:2px 6px' title='Redigera'>✏️</button>"
+      +"<button class='delbtn' data-id='"+log.id+"'>x</button>"
+      +"</div>";
+  }).join("");
+
+  b.querySelectorAll(".delbtn[data-id]").forEach(function(btn){
+    btn.onclick=function(){logs=logs.filter(function(l){return l.id!==Number(btn.dataset.id);});editingId=null;saveAndSync();hdr();renderHistory();};
+  });
+  b.querySelectorAll("[data-edit]").forEach(function(btn){
+    btn.onclick=function(){editingId=Number(btn.dataset.edit);renderHistory();};
+  });
+  logs.forEach(function(log){
+    var saveBtn=b.querySelector("#save-edit-"+log.id);
+    var cancelBtn=b.querySelector("#cancel-edit-"+log.id);
+    if(saveBtn){
+      saveBtn.onclick=function(){
+        var timeVal=b.querySelector("#edit-time-"+log.id).value.trim();
+        var noteVal=b.querySelector("#edit-note-"+log.id).value.trim();
+        log.time=timeVal;
+        log.note=noteVal;
+        editingId=null;
+        saveAndSync();renderHistory();
+      };
+    }
+    if(cancelBtn){cancelBtn.onclick=function(){editingId=null;renderHistory();};}
+  });
+}
+
+// ---- KOMMUNIKATION ----
+function renderKomm(){
+  var b=document.getElementById("body");
+  var modes=[
+    {id:"klarhet",label:"Klarhet",desc:"Gör tydligare"},
+    {id:"svar",label:"Svar",desc:"Svarsförslag"},
+    {id:"omforma",label:"Omforma",desc:"Formulera idé"},
+    {id:"synonymer",label:"Synonymer",desc:"Hitta synonymer"}
+  ];
+  var selector="<div class='lbl'>Skrivhjälp</div><div style='display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px'>"
+    +modes.map(function(m){return "<button class='mode-btn"+(kommMode===m.id?" on":"")+"' data-mode='"+m.id+"'>"+m.label+"<div class='mode-desc'>"+m.desc+"</div></button>";}).join("")
+    +"</div><div id='komm-content'></div>";
+  b.innerHTML=selector;
+  b.querySelectorAll(".mode-btn").forEach(function(btn){
+    btn.onclick=function(){
+      if(btn.dataset.mode!==kommMode){kResult=null;sResult=null;oResult=null;}
+      kommMode=btn.dataset.mode;renderKommContent();
+    };
+  });
+  renderKommContent();
+}
+function renderKommContent(){
+  var c=document.getElementById("komm-content");
+  if(!c)return;
+  var inner="";
+  if(kommMode==="klarhet")inner=buildKlarhet();
+  else if(kommMode==="svar")inner=buildSvar();
+  else if(kommMode==="omforma")inner=buildOmforma();
+  else if(kommMode==="synonymer")inner=buildSynonymer();
+  c.innerHTML=inner;
+  var b=document.getElementById("body");
+  if(kommMode==="klarhet")bindKlarhet(b);
+  else if(kommMode==="svar")bindSvar(b);
+  else if(kommMode==="omforma")bindOmforma(b);
+  else if(kommMode==="synonymer")bindSynonymer(b);
+}
+
+// -- Klarhet --
+function buildKlarhet(){
+  if(kLoading)return spin();
+  if(kResult){
+    var cards=kResult.suggestions.map(function(s,i){return "<div class='scard'><div class='stone'>Forslag "+(i+1)+" - "+esc(s.tone)+"</div><div class='stext'>"+esc(s.text)+"</div>"+(s.why?"<div class='swhy'>"+esc(s.why)+"</div>":"")+"</div>";}).join("");
+    return "<div class='lbl'>Ditt meddelande</div><div class='orig'>"+esc(kResult.original)+"</div><div class='lbl'>Tydligare formuleringar</div>"+cards+"<button class='sec ghost mt12' id='kny'>Analysera nytt</button>";
+  }
+  var hist=kHist.slice(0,5).map(function(h,i){return histRow(h,i,"kidx","<span class='kbadge'>"+esc(h.context)+"</span>");}).join("");
+  return "<div class='lbl'>Till vem?</div><div class='ctx-chips'>"+ctxChips(CTXS,kCtx,"kctx")+"</div><div class='lbl'>Ditt meddelande</div><textarea class='ta' id='kta' placeholder='Klistra in meddelandet du vill gora tydligare...'>"+esc(kDraft)+"</textarea><button class='sec' id='kana'>Analysera</button>"+(hist?"<div class='mt20'><div class='lbl'>Tidigare</div>"+hist+"</div>":"");
+}
+function bindKlarhet(b){
+  if(kLoading)return;
+  if(kResult){var kny=b.querySelector("#kny");if(kny)kny.onclick=function(){kResult=null;kDraft="";renderKomm();};return;}
+  bindChips(b,"kctx",function(){return kCtx;},function(v){kCtx=v;});
+  var ta=b.querySelector("#kta");if(ta)ta.oninput=function(){kDraft=ta.value;};
+  var kana=b.querySelector("#kana");if(kana)kana.onclick=function(){var txt=b.querySelector("#kta").value.trim();if(!txt)return;kDraft=txt;doAnalyseKlarhet(txt);};
+  bindHist(b,"kidx",function(i){kResult=kHist[i];renderKomm();},function(i){kHist.splice(i,1);saveAndSync();renderKomm();});
+}
+async function doAnalyseKlarhet(text){
+  kLoading=true;renderKommContent();
+  var sys="Du ar en kommunikationscoach. Hjalp personen formulera sig tydligare till "+kCtx.toLowerCase()+". Svara BARA med giltig JSON: {\"suggestions\":[{\"tone\":\"Rakt pa sak\",\"text\":\"...\",\"why\":\"...\"},{\"tone\":\"Mjukare\",\"text\":\"...\",\"why\":\"...\"},{\"tone\":\"Kortfattat\",\"text\":\"...\",\"why\":\"...\"}]}";
+  try{var res=await aiCall(sys,"Originalmeddelande: "+text,1000);var data=await res.json();var parsed=JSON.parse(aiText(data).replace(/```json|```/g,"").trim());kResult={id:Date.now(),original:text,context:kCtx,suggestions:parsed.suggestions||[],timestamp:new Date().toISOString()};kHist=[kResult].concat(kHist).slice(0,20);saveAndSync();}
+  catch(e){kResult={id:Date.now(),original:text,context:kCtx,timestamp:new Date().toISOString(),suggestions:[{tone:"Fel",text:"Kunde inte analysera. Forsok igen.",why:""}]};}
+  kLoading=false;renderKommContent();
+}
+
+// -- Svar --
+function buildSvar(){
+  if(sLoading)return spin();
+  if(sResult){
+    var cards=sResult.replies.map(function(r,i){return "<div class='reply-card' data-ri='"+i+"'><div class='reply-tone'>"+esc(r.tone)+"</div><div class='reply-text'>"+esc(r.text)+"</div><div class='reply-why'>"+esc(r.why)+"</div><div class='copy-ok' id='scok"+i+"'>Kopierat!</div></div>";}).join("");
+    return "<div class='bubble-lbl'>"+esc(sResult.context)+"</div><div class='bubble-them'>"+esc(sResult.original)+"</div><div class='lbl mt12'>Svarsforslag - tryck for att kopiera</div>"+cards+"<button class='sec ghost mt12' id='sny'>Nytt meddelande</button>";
+  }
+  var hist=sHist.slice(0,5).map(function(h,i){return histRow(h,i,"sidx","<span class='kbadge'>"+esc(h.context)+"</span>");}).join("");
+  return "<div class='lbl'>Fran vem?</div><div class='ctx-chips'>"+ctxChips(CTXS,sCtx,"sctx")+"</div><div class='lbl'>Deras meddelande</div><textarea class='ta' id='smsg' placeholder='Klistra in meddelandet du fatt...' style='min-height:90px'>"+esc(sDraft)+"</textarea><div class='lbl mt8'>Vad vill du formedla? (valfritt)</div><textarea class='ta' id='sictx' placeholder='T.ex. vill tacka nej men vara varm...' style='min-height:60px'>"+esc(sMyCtx)+"</textarea><button class='sec' id='sfetch'>Ge mig svarsforslag</button>"+(hist?"<div class='mt20'><div class='lbl'>Tidigare</div>"+hist+"</div>":"");
+}
+function bindSvar(b){
+  if(sLoading)return;
+  if(sResult){
+    b.querySelectorAll(".reply-card").forEach(function(card){card.onclick=function(){copyText(sResult.replies[Number(card.dataset.ri)].text);showCopyOk("scok"+card.dataset.ri);};});
+    var sny=b.querySelector("#sny");if(sny)sny.onclick=function(){sResult=null;sDraft="";sMyCtx="";renderKomm();};return;
+  }
+  bindChips(b,"sctx",function(){return sCtx;},function(v){sCtx=v;});
+  var ta=b.querySelector("#smsg"),tc=b.querySelector("#sictx");
+  if(ta)ta.oninput=function(){sDraft=ta.value;};if(tc)tc.oninput=function(){sMyCtx=tc.value;};
+  var sfetch=b.querySelector("#sfetch");if(sfetch)sfetch.onclick=function(){var msg=b.querySelector("#smsg").value.trim();if(!msg)return;sDraft=msg;sMyCtx=b.querySelector("#sictx").value.trim();doFetchSvar(sDraft,sMyCtx);};
+  bindHist(b,"sidx",function(i){sResult=sHist[i];renderKomm();},function(i){sHist.splice(i,1);saveAndSync();renderKomm();});
+}
+async function doFetchSvar(msg,myIntent){
+  sLoading=true;renderKommContent();
+  var intentPart=myIntent?" Vad jag vill formedla: "+myIntent:"";
+  var sys="Du ar en kommunikationscoach. Hjalp personen svara pa meddelanden fran "+sCtx.toLowerCase()+". Svara BARA med giltig JSON: {\"replies\":[{\"tone\":\"Varm och personlig\",\"text\":\"...\",\"why\":\"...\"},{\"tone\":\"Tydlig och direkt\",\"text\":\"...\",\"why\":\"...\"},{\"tone\":\"Kortfattad\",\"text\":\"...\",\"why\":\"...\"},{\"tone\":\"Lekfull\",\"text\":\"...\",\"why\":\"...\"}]}";
+  try{var res=await aiCall(sys,"Deras meddelande: "+msg+intentPart,1200);var data=await res.json();var parsed=JSON.parse(aiText(data).replace(/```json|```/g,"").trim());sResult={id:Date.now(),original:msg,context:sCtx,intent:myIntent,replies:parsed.replies||[],timestamp:new Date().toISOString()};sHist=[sResult].concat(sHist).slice(0,20);saveAndSync();}
+  catch(e){sResult={id:Date.now(),original:msg,context:sCtx,intent:myIntent,timestamp:new Date().toISOString(),replies:[{tone:"Fel",text:"Kunde inte generera. Forsok igen.",why:""}]};}
+  sLoading=false;renderKommContent();
+}
+
+// -- Omforma --
+function buildOmforma(){
+  if(oLoading)return spin();
+  if(oResult){
+    var cards=oResult.suggestions.map(function(s,i){return "<div class='scard' data-oi='"+i+"'><div class='stone'>Forslag "+(i+1)+" - "+esc(s.tone)+"</div><div class='stext'>"+esc(s.text)+"</div><div class='swhy'>"+esc(s.why)+"</div><div class='copy-ok' id='ocok"+i+"'>Kopierat!</div></div>";}).join("");
+    return "<div class='lbl'>Din ide</div><div class='orig'>"+esc(oResult.idea)+"</div><div class='lbl'>Forslag - tryck for att kopiera</div>"+cards+"<button class='sec ghost mt12' id='ony'>Formulera nagot nytt</button>";
+  }
+  var hist=oHist.slice(0,5).map(function(h,i){return histRow(h,i,"oidx","<span class='kbadge'>"+esc(h.to)+"</span><span class='kbadge'>"+esc(h.tone)+"</span>");}).join("");
+  return "<div class='lbl'>Till vem?</div><div class='ctx-chips'>"+ctxChips(CTXS,oCtx,"octx")+"</div><div class='lbl'>Ton</div><div class='ctx-chips'>"+ctxChips(OTONES,oTone,"otone")+"</div><div class='lbl'>Beskriv vad du vill saga</div><textarea class='ta' id='ota' placeholder='T.ex. vill be om ursakt for att jag missade motet...'>"+esc(oDraft)+"</textarea><button class='sec' id='ofetch'>Ge mig formuleringar</button>"+(hist?"<div class='mt20'><div class='lbl'>Tidigare</div>"+hist+"</div>":"");
+}
+function bindOmforma(b){
+  if(oLoading)return;
+  if(oResult){
+    b.querySelectorAll("[data-oi]").forEach(function(card){card.onclick=function(){copyText(oResult.suggestions[Number(card.dataset.oi)].text);showCopyOk("ocok"+card.dataset.oi);};});
+    var ony=b.querySelector("#ony");if(ony)ony.onclick=function(){oResult=null;oDraft="";renderKomm();};return;
+  }
+  bindChips(b,"octx",function(){return oCtx;},function(v){oCtx=v;});
+  bindChips(b,"otone",function(){return oTone;},function(v){oTone=v;});
+  var ta=b.querySelector("#ota");if(ta)ta.oninput=function(){oDraft=ta.value;};
+  var ofetch=b.querySelector("#ofetch");if(ofetch)ofetch.onclick=function(){var txt=b.querySelector("#ota").value.trim();if(!txt)return;oDraft=txt;doFetchOmforma(txt);};
+  bindHist(b,"oidx",function(i){oResult=oHist[i];renderKomm();},function(i){oHist.splice(i,1);saveAndSync();renderKomm();});
+}
+async function doFetchOmforma(idea){
+  oLoading=true;renderKommContent();
+  var sys="Du ar en kommunikationscoach. Hjalp personen formulera ett meddelande till "+oCtx.toLowerCase()+" med en "+oTone.toLowerCase()+" ton. Svara BARA med giltig JSON: {\"suggestions\":[{\"tone\":\"Alternativ 1\",\"text\":\"...\",\"why\":\"...\"},{\"tone\":\"Alternativ 2\",\"text\":\"...\",\"why\":\"...\"},{\"tone\":\"Kortfattad\",\"text\":\"...\",\"why\":\"...\"}]}";
+  try{var res=await aiCall(sys,"Ide: "+idea,1200);var data=await res.json();var parsed=JSON.parse(aiText(data).replace(/```json|```/g,"").trim());oResult={id:Date.now(),idea:idea,to:oCtx,tone:oTone,suggestions:parsed.suggestions||[],timestamp:new Date().toISOString()};oHist=[oResult].concat(oHist).slice(0,20);saveAndSync();}
+  catch(e){oResult={id:Date.now(),idea:idea,to:oCtx,tone:oTone,timestamp:new Date().toISOString(),suggestions:[{tone:"Fel",text:"Kunde inte generera. Forsok igen.",why:""}]};}
+  oLoading=false;renderKommContent();
+}
+
+
+// -- Synonymer --
+function buildSynonymer(){
+  if(synLoading)return spin();
+  if(synResult){
+    var groups=synResult.groups.map(function(g){
+      var words=g.words.map(function(w){
+        return "<span style='display:inline-block;padding:6px 12px;margin:4px;border-radius:20px;background:#1a1a24;border:1px solid #2a2a38;color:#e8e6e0;font-size:13px;cursor:pointer' data-word='"+esc(w)+"'>"+esc(w)+"</span>";
+      }).join("");
+      return "<div class='scard' style='cursor:default'>"
+        +"<div class='stone'>"+esc(g.label)+"</div>"
+        +"<div style='margin-top:4px'>"+words+"</div>"
+        +"</div>";
+    }).join("");
+    return "<div class='lbl'>Synonymer för</div><div class='orig'>"+esc(synResult.word)+"</div>"
+      +"<div class='lbl'>Klicka för att kopiera</div>"
+      +groups
+      +"<div class='copy-ok' id='syncok' style='text-align:center;margin-top:4px'>Kopierat!</div>"
+      +"<button class='sec ghost mt12' id='synny'>Sök nytt ord</button>";
+  }
+  var hist=synHist.slice(0,5).map(function(h,i){
+    return "<div class='khist' style='display:flex;align-items:flex-start;gap:8px' data-synidx='"+i+"'>"
+      +"<div style='flex:1;min-width:0'><div class='kmsg'>"+esc(h.word)+"</div>"
+      +"<div class='kmeta'><span>"+fd(h.timestamp)+"</span></div></div>"
+      +"<button class='delbtn' data-delsynidx='"+i+"' style='flex-shrink:0;font-size:18px;padding:0 2px'>x</button>"
+      +"</div>";
+  }).join("");
+  return "<div class='lbl'>Ord eller fras</div>"
+    +"<div class='row'><input class='inp' id='synin' placeholder='T.ex. glad, snabb, säga...' value='"+esc(synDraft)+"'/>"
+    +"<button class='abtn' id='synfetch'>&#8594;</button></div>"
+    +(hist?"<div class='mt20'><div class='lbl'>Tidigare</div>"+hist+"</div>":"");
+}
+function bindSynonymer(b){
+  if(synLoading)return;
+  if(synResult){
+    b.querySelectorAll("[data-word]").forEach(function(el){
+      el.onclick=function(){copyText(el.dataset.word);showCopyOk("syncok");};
+    });
+    var synny=b.querySelector("#synny");if(synny)synny.onclick=function(){synResult=null;synDraft="";renderKommContent();};
+    return;
+  }
+  var si=b.querySelector("#synin");
+  if(si){
+    si.oninput=function(){synDraft=si.value;};
+    si.onkeydown=function(e){if(e.key==="Enter"&&si.value.trim())doFetchSynonymer(si.value.trim());};
+  }
+  var sf=b.querySelector("#synfetch");
+  if(sf)sf.onclick=function(){var v=b.querySelector("#synin").value.trim();if(v)doFetchSynonymer(v);};
+  b.querySelectorAll("[data-synidx]").forEach(function(el){
+    el.onclick=function(e){if(!e.target.dataset.delsynidx){synResult=synHist[Number(el.dataset.synidx)];renderKommContent();}};
+  });
+  b.querySelectorAll("[data-delsynidx]").forEach(function(btn){
+    btn.onclick=function(e){e.stopPropagation();synHist.splice(Number(btn.dataset.delsynidx),1);saveAndSync();renderKommContent();};
+  });
+}
+async function doFetchSynonymer(word){
+  synLoading=true;synDraft=word;renderKommContent();
+  var sys='Du ar en sprakexpert. Ge synonymer och liknande uttryck pa svenska. Svara BARA med giltig JSON utan backticks: {"groups":[{"label":"Vanliga synonymer","words":["...","...","..."]},{"label":"Mer formella","words":["...","...","..."]},{"label":"Mer informella","words":["...","...","..."]}]} Ge 4-6 ord per grupp.';
+  try{
+    var res=await aiCall(sys,"Hitta synonymer för: "+word,800);
+    var data=await res.json();
+    var parsed=JSON.parse(aiText(data).replace(/```json|```/g,"").trim());
+    synResult={id:Date.now(),word:word,groups:parsed.groups||[],timestamp:new Date().toISOString()};
+    synHist=[synResult].concat(synHist).slice(0,20);saveAndSync();
+  }catch(e){
+    synResult={id:Date.now(),word:word,timestamp:new Date().toISOString(),groups:[{label:"Fel",words:["Kunde inte hämta synonymer. Försök igen."]}]};
+  }
+  synLoading=false;renderKommContent();
+}
+
+// ---- FORKLARA ----
+function renderForklara(){
+  var b=document.getElementById("body");
+  if(fLoading){b.innerHTML=spin();return;}
+  if(fResult){
+    var cards=fResult.explanations.map(function(e,i){return "<div class='scard' data-foi='"+i+"'><div class='stone'>"+esc(e.level)+"</div><div class='stext'>"+esc(e.text)+"</div><div class='copy-ok' id='fcok"+i+"'>Kopierat!</div></div>";}).join("");
+    b.innerHTML="<div class='lbl'>Din fraga</div><div class='orig'>"+esc(fResult.question)+"</div><div class='lbl'>Forklaringar - tryck for att kopiera</div>"+cards+"<button class='sec ghost mt12' id='fny'>Stall en ny fraga</button>";
+    b.querySelectorAll("[data-foi]").forEach(function(card){card.onclick=function(){copyText(fResult.explanations[Number(card.dataset.foi)].text);showCopyOk("fcok"+card.dataset.foi);};});
+    b.querySelector("#fny").onclick=function(){fResult=null;fDraft="";renderForklara();};return;
+  }
+  var hist=fHist.slice(0,5).map(function(h,i){return histRow(h,i,"fidx","");}).join("");
+  b.innerHTML="<div class='lbl'>Vad vill du forsta?</div><textarea class='ta' id='fta' placeholder='T.ex. Vad ar inflation? Hur fungerar en motor?'>"+esc(fDraft)+"</textarea><button class='sec' id='ffetch'>Forklara for mig</button>"+(hist?"<div class='mt20'><div class='lbl'>Tidigare fragor</div>"+hist+"</div>":"");
+  var ta=b.querySelector("#fta");if(ta)ta.oninput=function(){fDraft=ta.value;};
+  b.querySelector("#ffetch").onclick=function(){var txt=b.querySelector("#fta").value.trim();if(!txt)return;fDraft=txt;doFetchForklara(txt);};
+  bindHist(b,"fidx",function(i){fResult=fHist[i];renderForklara();},function(i){fHist.splice(i,1);saveAndSync();renderForklara();});
+}
+async function doFetchForklara(question){
+  fLoading=true;renderForklara();
+  var sys="Du ar en pedagog. Forklara amnet pa tre nivan. Svara BARA med giltig JSON: {\"explanations\":[{\"level\":\"Enkel\",\"text\":\"...\"},{\"level\":\"Mellanniva\",\"text\":\"...\"},{\"level\":\"Detaljerad\",\"text\":\"...\"}]}";
+  try{var res=await aiCall(sys,"Forklara: "+question,1500);var data=await res.json();var parsed=JSON.parse(aiText(data).replace(/```json|```/g,"").trim());fResult={id:Date.now(),question:question,explanations:parsed.explanations||[],timestamp:new Date().toISOString()};fHist=[fResult].concat(fHist).slice(0,20);saveAndSync();}
+  catch(e){fResult={id:Date.now(),question:question,timestamp:new Date().toISOString(),explanations:[{level:"Fel",text:"Kunde inte hamta forklaring. Forsok igen."}]};}
+  fLoading=false;renderForklara();
+}
+
+// ---- TERAPI ----
+function renderTerapi(){
+  var b=document.getElementById("body");
+  var chatHtml="";
+  if(tMessages.length){
+    chatHtml="<div class='chat-area'>"
+      +tMessages.map(function(m){
+        if(m.role==="user"){
+          return "<div style='display:flex;justify-content:flex-end'><div class='bubble-me'>"+esc(m.content)+"</div></div>";
+        }
+        return "<div style='display:flex;justify-content:flex-start'><div class='bubble-them'>"+esc(m.content)+"</div></div>";
+      }).join("")
+      +(tLoading?"<div style='display:flex;justify-content:flex-start'><div class='bubble-them' style='color:#6b6880;font-style:italic'>Skriver...</div></div>":"")
+      +"</div>";
+  } else {
+    chatHtml="<div style='text-align:center;padding:32px 0 20px;color:#6b6880;font-size:14px;line-height:1.7'>"
+      +"<div style='font-size:36px;margin-bottom:12px'>🧠</div>"
+      +"Jag ar har for att lyssna och hjalpa dig reflektera.<br>Dela dina tankar, bekymmer eller ideer.</div>";
+  }
+  var savedHist="";
+  if(tHist.length){
+    savedHist="<div class='mt20'><div class='lbl'>Sparade samtal</div>"
+      +tHist.slice(0,5).map(function(h,i){return histRow(h,i,"tidx","<span class='kbadge'>"+h.messages.length+" meddelanden</span>");}).join("")
+      +"</div>";
+  }
+  var btns=tMessages.length
+    ?"<div style='display:flex;gap:8px;margin-bottom:12px'><button class='sec ghost' id='tsave' style='flex:1'>Spara samtal</button><button class='sec ghost' id='tclear' style='flex:1'>Nytt samtal</button></div>"
+    :"";
+  b.innerHTML=chatHtml+btns
+    +"<div class='row'><input class='inp' id='tinp' placeholder='Skriv dina tankar...' value='"+esc(tInput)+"'/><button class='abtn' id='tsend'>&#8594;</button></div>"
+    +savedHist;
+  var ti=b.querySelector("#tinp");
+  if(ti){
+    ti.oninput=function(){tInput=ti.value;};
+    ti.onkeydown=function(e){if(e.key==="Enter"&&!e.shiftKey&&ti.value.trim()){e.preventDefault();doSendTerapi(ti.value.trim());}};
+    if(!tLoading)setTimeout(function(){ti.focus();},50);
+  }
+  b.querySelector("#tsend").onclick=function(){var v=b.querySelector("#tinp").value.trim();if(v)doSendTerapi(v);};
+  if(tMessages.length){
+    b.querySelector("#tsave").onclick=function(){
+      var summary=tMessages[0]?tMessages[0].content.slice(0,60)+"...":"Samtal";
+      tHist=[{id:Date.now(),summary:summary,messages:tMessages.slice(),timestamp:new Date().toISOString()}].concat(tHist).slice(0,20);
+      tMessages=[];tInput="";saveAndSync();renderTerapi();
+    };
+    b.querySelector("#tclear").onclick=function(){tMessages=[];tInput="";renderTerapi();};
+  }
+  bindHist(b,"tidx",
+    function(i){tMessages=tHist[i].messages.slice();renderTerapi();},
+    function(i){tHist.splice(i,1);saveAndSync();renderTerapi();}
+  );
+  // Scroll chat to bottom
+  var ca=b.querySelector(".chat-area");if(ca)ca.scrollTop=ca.scrollHeight;
+}
+async function doSendTerapi(text){
+  tMessages.push({role:"user",content:text});
+  tInput="";tLoading=true;renderTerapi();
+  var sys="Du ar en empatisk samtalsstod. Lyssna aktivt, stalla genomtankta foljdfragor och hjalp personen reflektera over sina tankar och ideer. Ge rad nar det frages men fokusera annars pa att hjalpa personen tanka igenom sina egna losningar. Svara pa svenska, var varm. Halla svaren kortfattade (max 3-4 meningar).";
+  var history=tMessages.slice(-12).map(function(m){return {role:m.role,content:m.content};});
+  try{
+    var res=await aiChat(sys,history,600);
+    var data=await res.json();
+    var reply=data.choices&&data.choices[0]?data.choices[0].message.content||"":"Kunde inte svara. Forsok igen.";
+    tMessages.push({role:"assistant",content:reply});
+  }catch(e){tMessages.push({role:"assistant",content:"Nagot gick fel. Forsok igen."});}
+  tLoading=false;renderTerapi();
+}
+
+// ---- AI-TIPS ----
+function renderTips(){
+  var b=document.getElementById("body");
+  if(tipsLoading){b.innerHTML=spin();return;}
+  if(tipText){
+    b.innerHTML="<div class='lbl'>Tips om: "+esc(tipTopic||"dina aktiviteter")+"</div>"
+      +"<div class='tbox'>"+esc(tipText)+"</div>"
+      +"<button class='sec ghost' id='refbtn'>Fraga om nagot annat</button>";
+    b.querySelector("#refbtn").onclick=function(){tipText="";tipTopic="";renderTips();};
+    return;
+  }
+  b.innerHTML="<div class='eico' style='text-align:center;padding-top:20px'>🤖</div>"
+    +"<div style='text-align:center;margin:12px 0 20px;font-size:14px;color:#6b6880;line-height:1.6'>Vad vill du ha tips om?<br><span style='font-size:12px'>Kan vara vad som helst - traning, vanor, produktivitet, somn...</span></div>"
+    +"<div class='lbl'>Amne</div>"
+    +"<textarea class='ta' id='topicin' placeholder='T.ex. hur sover jag battre, tips for att lasa mer...' style='min-height:90px'>"+esc(tipTopic)+"</textarea>"
+    +"<button class='sec' id='getbtn'>Ge mig tips</button>";
+  var ta=b.querySelector("#topicin");
+  if(ta)ta.oninput=function(){tipTopic=ta.value;};
+  b.querySelector("#getbtn").onclick=function(){
+    var topic=b.querySelector("#topicin").value.trim();
+    if(!topic)return;
+    tipTopic=topic;fetchTips();
+  };
+}
+async function fetchTips(){
+  tipsLoading=true;tipText="";renderTips();
+  var sum=logs.slice(0,20).map(function(l){return "["+l.category+"] "+l.activity+(l.note?": "+l.note:"");}).join("\n")||"Inga aktiviteter loggade.";
+  var prompt="Tips om: "+tipTopic+"\n\nAktiviteter for kontext:\n"+sum+"\n\nGe 3-5 konkreta, personliga tips pa svenska.";
+  try{
+    var res=await aiCall("Du ar en coach som ger personliga, konkreta tips pa svenska anpassade till amnet anvandaren fragar om. Hall det kort och actionbart.",prompt,1000);
+    var data=await res.json();tipText=aiText(data)||"Kunde inte hamta tips.";
+  }catch(e){tipText="Nagot gick fel. Forsok igen.";}
+  tipsLoading=false;renderTips();
+}
+
+init();
+</script>
+</body>
+</html>
