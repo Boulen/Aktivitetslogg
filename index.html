@@ -1,0 +1,2556 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AI-Assistent</title>
+<script>
+(function(){
+  var h=location.hash;
+  if(h&&h.includes("access_token")){
+    var p=new URLSearchParams(h.slice(1));
+    var t=p.get("access_token");
+    if(t){localStorage.setItem("akt_token",t);localStorage.setItem("token_time",Date.now());history.replaceState(null,"",location.pathname);}
+  }
+})();
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#080a10;min-height:100vh;font-family:system-ui,sans-serif;color:#e4ecf7;}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#080a10;min-height:100vh;font-family:system-ui,sans-serif;}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+.wrap{max-width:480px;margin:0 auto;padding-bottom:80px;}
+.hdr{padding:20px 16px 12px;border-bottom:1px solid #141d27;display:flex;align-items:center;gap:10px;}
+.hdr-info{flex:1;}
+.hdr-lbl{font-size:11px;letter-spacing:2px;color:#6b6880;text-transform:uppercase;margin-bottom:2px;}
+.hdr-title{font-size:22px;font-weight:600;color:#e4ecf7;}
+.sync-btn{padding:7px 13px;border-radius:20px;border:1px solid #1c2733;background:#10151f;color:#888;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.sync-btn.ok{border-color:#2a4a2a;background:#1a2a1a;color:#4ade80;}
+.sync-btn.err{border-color:#4a1a1a;background:#2a1a1a;color:#f87171;}
+.user-row{padding:8px 16px;background:#10151f;border-bottom:1px solid #141d27;display:flex;align-items:center;gap:8px;font-size:12px;}
+.avatar{width:22px;height:22px;border-radius:50%;background:#0a2933;display:flex;align-items:center;justify-content:center;color:#00d4ff;font-size:11px;font-weight:600;}
+.signout{margin-left:auto;color:#4a4860;cursor:pointer;font-size:11px;text-decoration:underline;}
+.login-screen{padding:60px 24px;text-align:center;}
+.login-icon{font-size:52px;margin-bottom:20px;}
+.login-title{font-size:22px;font-weight:600;color:#e4ecf7;margin-bottom:10px;}
+.login-sub{font-size:14px;color:#6b6880;line-height:1.6;margin-bottom:36px;}
+.login-btn{display:inline-flex;align-items:center;gap:10px;padding:13px 24px;border-radius:12px;background:#fff;border:none;color:#1f1f1f;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;}
+.login-btn svg{width:20px;height:20px;flex-shrink:0;}
+.tabs{display:flex;border-bottom:1px solid #141d27;overflow-x:auto;justify-content:center;}
+.tab{flex:0 0 auto;padding:12px 10px;background:none;border:none;border-bottom:2px solid transparent;color:#6b6880;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s;}
+.tab.on{color:#00d4ff;font-weight:600;border-bottom-color:#00d4ff;text-shadow:0 0 8px rgba(0,212,255,0.5);}
+.body{padding:16px;}
+.lbl{font-size:11px;color:#6b6880;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.chip{padding:7px 13px;border-radius:20px;border:1px solid #1c2733;background:#10151f;color:#888;font-size:12px;cursor:pointer;font-family:inherit;}
+.chip.on{background:#00d4ff;color:#06141c;border-color:#00d4ff;font-weight:700;}
+.qrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.qbtn{padding:9px 14px;border-radius:10px;background:#10151f;border:1px solid #1c2733;color:#c4c0d4;font-size:13px;cursor:pointer;font-family:inherit;}
+.row{display:flex;gap:8px;margin-bottom:10px;}
+.inp{flex:1;padding:11px 13px;border-radius:10px;background:#10151f;border:1px solid #1c2733;color:#e4ecf7;font-size:14px;outline:none;font-family:inherit;}
+.inp::placeholder{color:#4a4860;}
+.inp:focus{border-color:#00d4ff;}
+.inp.w100{width:100%;flex:none;}
+.abtn{padding:11px 18px;border-radius:10px;background:#00d4ff;border:none;color:#06141c;font-weight:700;font-size:18px;cursor:pointer;box-shadow:0 0 16px rgba(0,212,255,0.35);}
+.ok-toast{margin-top:12px;padding:11px 14px;border-radius:10px;background:#1a2a1a;border:1px solid #2a4a2a;color:#4ade80;font-size:13px;text-align:center;animation:fi .2s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.srow{display:flex;align-items:center;gap:10px;padding:10px 13px;background:#10151f;border-radius:10px;margin-bottom:6px;border:1px solid #141d27;}
+.sbadge{font-size:11px;padding:3px 10px;border-radius:20px;background:#0a2933;color:#00d4ff;font-weight:600;}
+.entry{padding:13px 15px;background:#10151f;border-radius:12px;border:1px solid #141d27;display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}
+.etitle{font-weight:600;font-size:14px;color:#e4ecf7;}
+.enote{font-size:12px;color:#6b6880;margin-top:2px;}
+.etime{font-size:11px;color:#4a4860;margin-top:3px;}
+.delbtn{background:none;border:none;color:#4a4860;cursor:pointer;font-size:18px;padding:0 2px;line-height:1;}
+.empty{text-align:center;padding:60px 0;color:#6b6880;}
+.eico{font-size:40px;margin-bottom:12px;}
+.tbox{padding:18px;background:#0c1119;border-radius:14px;border:1px solid #0a2933;line-height:1.7;font-size:15px;color:#c4c0d4;white-space:pre-wrap;margin-bottom:14px;}
+.spnr{width:32px;height:32px;border-radius:50%;border:3px solid #1c2733;border-top-color:#00d4ff;animation:spin .8s linear infinite;margin:0 auto;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ta{width:100%;min-height:110px;padding:13px;border-radius:12px;background:#10151f;border:1px solid #1c2733;color:#e4ecf7;font-size:14px;line-height:1.6;resize:vertical;outline:none;font-family:inherit;margin-bottom:10px;}
+.ta:focus{border-color:#00d4ff;}
+.ta::placeholder{color:#4a4860;}
+.ctx-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.ctx-chip{padding:7px 13px;border-radius:20px;border:1px solid #1c2733;background:#10151f;color:#888;font-size:12px;cursor:pointer;font-family:inherit;}
+.ctx-chip.on{background:#0a2933;color:#00d4ff;border-color:#00d4ff;}
+.orig{background:#10151f;border-left:3px solid #3a3a50;border-radius:0;padding:11px 13px;font-size:13px;color:#888;line-height:1.5;margin-bottom:16px;font-style:italic;}
+.scard{background:#0c1119;border-radius:14px;border:1px solid #0a2933;padding:16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.scard:active{border-color:#00d4ff;}
+.stone{font-size:10px;letter-spacing:2px;color:#6b6880;text-transform:uppercase;margin-bottom:7px;}
+.stext{font-size:14px;color:#e4ecf7;line-height:1.6;margin-bottom:9px;}
+.swhy{font-size:12px;color:#6b6880;line-height:1.5;font-style:italic;}
+.sec{background:#00d4ff;border:none;color:#06141c;width:100%;padding:13px;border-radius:12px;font-size:14px;cursor:pointer;font-weight:700;font-family:inherit;margin-top:4px;box-shadow:0 0 16px rgba(0,212,255,0.3);}
+.sec.ghost{background:#10151f;border:1px solid #00d4ff;color:#00d4ff;}
+.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt20{margin-top:20px;}
+.bubble-them{background:#10151f;border:1px solid #1c2733;color:#e4ecf7;padding:11px 14px;border-radius:4px 12px 12px 12px;font-size:14px;line-height:1.5;max-width:85%;margin-bottom:4px;}
+.bubble-me{background:#0a2933;border:1px solid #00d4ff;color:#e4ecf7;padding:11px 14px;border-radius:12px 4px 12px 12px;font-size:14px;line-height:1.5;max-width:85%;margin-bottom:4px;align-self:flex-end;}
+.bubble-lbl{font-size:10px;color:#6b6880;margin-bottom:3px;}
+.reply-card{background:#10151f;border-radius:12px;border:1px solid #1c2733;padding:15px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.reply-card:active{border-color:#00d4ff;}
+.reply-tone{font-size:10px;letter-spacing:2px;color:#6b6880;text-transform:uppercase;margin-bottom:6px;}
+.reply-text{font-size:14px;color:#e4ecf7;line-height:1.6;margin-bottom:6px;}
+.reply-why{font-size:12px;color:#6b6880;font-style:italic;}
+.copy-ok{font-size:12px;color:#4ade80;margin-top:5px;display:none;}
+.copy-ok.vis{display:block;}
+.khist{padding:13px 15px;background:#10151f;border-radius:12px;border:1px solid #141d27;margin-bottom:8px;cursor:pointer;}
+.kmsg{font-size:12px;color:#c4c0d4;line-height:1.4;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kmeta{font-size:10px;color:#4a4860;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.kbadge{padding:2px 8px;border-radius:20px;background:#0a2933;color:#00d4ff;font-size:10px;font-weight:600;}
+.mode-btn{padding:12px 8px;border-radius:12px;border:1px solid #1c2733;background:#10151f;color:#888;font-size:13px;cursor:pointer;font-family:inherit;text-align:center;transition:all .15s;}
+.mode-btn.on{border-color:#00d4ff;background:#0a2933;color:#00d4ff;font-weight:600;}
+.mode-desc{font-size:10px;color:#6b6880;margin-top:3px;}
+.chat-area{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;min-height:60px;}
+.wrap{background:#080a10;border-radius:16px;}
+
+
+.sync-btn{padding:7px 13px;border-radius:20px;border:1px solid #1c2733;background:#10151f;color:#888;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.sync-btn.ok{border-color:#2a4a2a;background:#1a2a1a;color:#4ade80;}
+.sync-btn.err{border-color:#4a1a1a;background:#2a1a1a;color:#f87171;}
+.user-row{padding:8px 16px;background:#10151f;border-bottom:1px solid #141d27;display:flex;align-items:center;gap:8px;font-size:12px;}
+.avatar{width:22px;height:22px;border-radius:50%;background:#0a2933;display:flex;align-items:center;justify-content:center;color:#00d4ff;font-size:11px;font-weight:600;}
+.signout{margin-left:auto;color:#4a4860;cursor:pointer;font-size:11px;text-decoration:underline;}
+.login-screen{padding:60px 24px;text-align:center;}
+.login-title{font-size:22px;font-weight:600;color:#e4ecf7;margin-bottom:10px;}
+.login-sub{font-size:14px;color:#6b6880;line-height:1.6;margin-bottom:36px;}
+.login-btn{display:inline-flex;align-items:center;gap:10px;padding:13px 24px;border-radius:12px;background:#fff;border:none;color:#1f1f1f;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;}
+.login-btn svg{width:20px;height:20px;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="login-screen" class="login-screen" style="display:block">
+    <div style="font-size:52px;margin-bottom:20px">🤖</div>
+    <div class="login-title">AI-Assistent</div>
+    <div class="login-sub">Logga in med Google för att synka mellan enheter.</div>
+    <button class="login-btn" onclick="startLogin()">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Logga in med Google
+    </button>
+    <div id="debug-msg" style="margin-top:20px;font-size:11px;color:#4a4860;"></div>
+  </div>
+  <div id="main-app" style="display:none">
+    <div class="hdr">
+      <div class="hdr-info"><div class="hdr-title" id="htitle"></div></div>
+      <button class="sync-btn" id="sync-btn" onclick="syncNow()">Synka</button>
+      <button onclick="setView('installningar');render();" style="background:none;border:none;color:#6b6880;font-size:22px;cursor:pointer;padding:4px 6px;line-height:1;">⚙️</button>
+    </div>
+    <div class="user-row" id="user-row"></div>
+    <div class="tabs" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+      <button class="tab on" data-v="log">Logga</button>
+      <button class="tab" data-v="forklara">Sök</button>
+      <button class="tab" data-v="komm">Text</button>
+      <button class="tab" data-v="terapi">Terapi</button>
+      <button class="tab" data-v="tips">Tips</button>
+      <button class="tab" data-v="history">Historik</button>
+    </div>
+    <div class="body" id="body"></div>
+  </div>
+  </div>
+</div>
+<script>
+
+
+var PROXY = "https://ai-proxy.jenseskilsson95.workers.dev/";
+var selectedModel = "anthropic/claude-sonnet-4.6";
+var MODELS = [
+  {id:"anthropic/claude-sonnet-4.6",name:"Claude Sonnet 4.6",desc:"Balanserad och kraftfull — bra för det mesta"},
+  {id:"anthropic/claude-opus-4.8",name:"Claude Opus 4.8",desc:"Anthropics kraftfullaste — komplex analys, kodning och agentarbete"},
+  {id:"anthropic/claude-opus-4.7",name:"Claude Opus 4.7",desc:"Stark på långa agentkörningar och flerstegsprojekt"},
+  {id:"anthropic/claude-opus-4.6",name:"Claude Opus 4.6",desc:"Kraftfull generalist — bra för skrivande och analys"},
+  {id:"anthropic/claude-haiku-4.5",name:"Claude Haiku 4.5",desc:"Snabbast och billigast — enkla frågor och snabba svar"},
+  {id:"google/gemini-2.5-flash",name:"Gemini 2.5 Flash",desc:"Googles snabba modell — research, fakta och långa texter"},
+  {id:"google/gemini-2.5-pro",name:"Gemini 2.5 Pro",desc:"Googles kraftfullaste — komplex resonemang och kodning"},
+  {id:"openai/gpt-4.1",name:"GPT-4.1",desc:"OpenAIs produktionsmodell — bra på instruktioner och struktur"},
+  {id:"openai/gpt-4.1-mini",name:"GPT-4.1 Mini",desc:"OpenAIs effektiva modell — snabb och kostnadseffektiv"},
+  {id:"deepseek/deepseek-chat-v3-0324",name:"DeepSeek V3",desc:"Stark open source-modell — utmärkt på kodning och analys"},
+  {id:"x-ai/grok-3",name:"Grok 3",desc:"xAIs modell — aktuell info och kreativt skrivande"}
+];
+var FILE_NAME = "aktivitetslogg_data.json";
+
+var CATS = [
+  {id:"traning",label:"Traning",e:"🏃"},
+  {id:"film",label:"Film",e:"🎬"},
+  {id:"serie",label:"Serie",e:"📺"},
+  {id:"spel",label:"Spel",e:"🎮"},
+  {id:"bok",label:"Bok",e:"📚"},
+  {id:"studerat",label:"Studerat",e:"✏️"},
+  {id:"musik",label:"Musik",e:"🎵"},
+  {id:"arbete",label:"Arbete",e:"💼"},
+  {id:"somn",label:"Somn",e:"😴"},
+  {id:"avslappning",label:"Avslappning",e:"🛋️"},
+  {id:"kodande",label:"Kodande",e:"💻"},
+  {id:"stadning",label:"Stadning",e:"🧹"},
+  {id:"ovrigt",label:"Ovrigt",e:"✨"}
+];
+var QUICK = {
+  traning:["Lopning","Gympass","Cykling","Simning","Promenad","Stretching"],
+  film:["Action","Komedi","Drama","Thriller","Skrack","Dokumentar"],
+  serie:["Action","Komedi","Drama","Thriller","Anime","Dokusapa"],
+  spel:["PC","Playstation","Xbox","Nintendo","Mobilspel","Brdsspel"],
+  bok:["Skoenlitteratur","Facklitteratur","Thriller","Fantasy","Biografi","Sjalvhjalp"],
+  studerat:["Matematik","Sprak","Programmering","Historia","Naturvetenskap","Annat"],
+  musik:["Lyssnade pa musik","Spelade instrument","Konsert","Ovade sang","Ny playlist"],
+  arbete:["Mote","Djupfokus","Epost","Planering","Projekttid"],
+  somn:["Sov 8h","Sov 7h","Sov 6h","Tupplur","Dalig natt"],
+  avslappning:["Meditation","Promenad","Bad","Yoga","Naturvistelse","Nolltid"],
+  ovrigt:["Kreativt projekt","Social aktivitet","Naturvistelse","Annat"]
+};
+var CTXS = ["Van","Partner","Familj","Kollega"];
+var OTONES = ["Vanlig","Professionell","Direkt","Empatisk","Lekfull"];
+
+var logs=[], kHist=[], sHist=[], oHist=[], fHist=[], tHist=[], synHist=[], sentMsgs=[], sentPeople=[], sentConvs=[], fundHist=[], imageHist=[];
+var view="log", cat="traning", tipText="", tipsLoading=false, tipTopic="", tipsHistory=[];
+var kommMode="klarhet";
+var kCtx="Van", kResult=null, kLoading=false, kDraft="";
+var sCtx="Van", sResult=null, sLoading=false, sDraft="", sMyCtx="";
+var oCtx="Van", oTone="Vanlig", oResult=null, oLoading=false, oDraft="";
+var fResult=null, fLoading=false, fDraft="";
+var synResult=null, synLoading=false, synDraft="", synHist=[];
+var tMessages=[], tLoading=false, tInput="";
+
+function fd(iso){return new Date(iso).toLocaleDateString("sv-SE",{weekday:"short",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function copyText(txt){
+  if(navigator.clipboard){navigator.clipboard.writeText(txt).catch(function(){});}
+  else{var t=document.createElement("textarea");t.value=txt;document.body.appendChild(t);t.select();document.execCommand("copy");document.body.removeChild(t);}
+}
+function showCopyOk(id){var ok=document.getElementById(id);if(ok){ok.classList.add("vis");setTimeout(function(){ok.classList.remove("vis");},2000);}}
+function spin(){return "<div style='text-align:center;padding:60px 0'><div class='spnr'></div><div style='color:#6b6880;font-size:13px;margin-top:14px'>Arbetar...</div></div>";}
+
+async function loadLocal(){
+  try{
+    var saved=localStorage.getItem("selected_model");if(saved)selectedModel=saved;
+    var d=JSON.parse(localStorage.getItem("akt_data")||"{}");
+    logs=d.logs||[];kHist=d.kHist||[];sHist=d.sHist||[];oHist=d.oHist||[];fHist=d.fHist||[];tHist=d.tHist||[];synHist=d.synHist||[];sentMsgs=d.sentMsgs||[];sentPeople=d.sentPeople||[];sentConvs=d.sentConvs||[];fundHist=d.fundHist||[];savedJokes=d.savedJokes||[];imageHist=d.imageHist||[];
+    var ml=d.mediaList||{};mediaList={bok:ml.bok||[],musik:ml.musik||[],film:ml.film||[],serie:ml.serie||[],podcast:ml.podcast||[],videodelning:ml.videodelning||[],spel:ml.spel||[],ovrigt:ml.ovrigt||[]};
+    mediaFardig=d.mediaFardig||[];
+  }catch(e){}
+}
+function saveLocal(){
+  try{localStorage.setItem("akt_data",JSON.stringify({logs:logs,kHist:kHist,sHist:sHist,oHist:oHist,fHist:fHist,tHist:tHist,synHist:synHist,sentMsgs:sentMsgs,sentPeople:sentPeople,sentConvs:sentConvs,fundHist:fundHist,savedJokes:savedJokes,imageHist:imageHist,mediaList:mediaList,mediaFardig:mediaFardig}));}catch(e){}
+}
+var CLIENT_ID="801528490569-po9h0jrah67hj3rrpanj0sk25sfkonvm.apps.googleusercontent.com";
+var SCOPE="https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile";
+var FILE_NAME="aktivitetslogg_data.json";
+var REDIRECT_URI=location.origin+location.pathname.replace(/\/+$/,"/");
+var accessToken=null,userInfo=null,driveFileId=null;
+function startLogin(){var p=new URLSearchParams({client_id:CLIENT_ID,redirect_uri:REDIRECT_URI,response_type:"token",scope:SCOPE,include_granted_scopes:"true",prompt:"select_account"});location.href="https://accounts.google.com/o/oauth2/v2/auth?"+p.toString();}
+async function checkToken(){try{var r=await fetch("https://www.googleapis.com/oauth2/v3/tokeninfo?access_token="+accessToken);var d=await r.json();return !d.error;}catch(e){return false;}}
+async function fetchUserInfo(){try{var r=await fetch("https://www.googleapis.com/oauth2/v3/userinfo",{headers:{Authorization:"Bearer "+accessToken}});userInfo=await r.json();localStorage.setItem("user_info",JSON.stringify(userInfo));}catch(e){}}
+function showLogin(){document.getElementById("login-screen").style.display="block";document.getElementById("main-app").style.display="none";}
+function showApp(){localStorage.setItem("akt_token",accessToken);localStorage.setItem("token_time",Date.now());document.getElementById("login-screen").style.display="none";document.getElementById("main-app").style.display="block";renderUserRow();document.querySelectorAll(".tab").forEach(function(btn){btn.onclick=function(){if(btn.dataset.v==="tips"){setView("tips");renderTips();}else if(btn.dataset.v==="history"){setView("history");openToday();renderHistory();}else{setView(btn.dataset.v);render();}};});setTimeout(function(){setSyncBtn("err","Session utgangen");setTimeout(function(){localStorage.removeItem("akt_token");localStorage.removeItem("token_time");accessToken=null;showLogin();},3000);},58*60*1000);render();}
+function renderUserRow(){var r=document.getElementById("user-row");if(!r||!userInfo)return;var name=userInfo.name||userInfo.email||"Inloggad";var initials=name.split(" ").map(function(w){return w[0];}).join("").slice(0,2).toUpperCase();r.innerHTML="<div class='avatar'>"+initials+"</div><span style='color:#c4c0d4;font-size:12px'>"+esc(name)+"</span><span class='signout' onclick='signOut()'>Logga ut</span>";}
+function signOut(){["akt_token","token_time","user_info","drive_fid"].forEach(function(k){localStorage.removeItem(k);});accessToken=null;userInfo=null;driveFileId=null;showLogin();}
+function setSyncBtn(cls,label){var b=document.getElementById("sync-btn");if(!b)return;b.className="sync-btn"+(cls?" "+cls:"");b.textContent=label;}
+async function syncNow(){if(!accessToken){setSyncBtn("err","Ej inloggad");return;}setSyncBtn("","Synkar...");try{var remote=await driveRead();if(remote){var m=mergeData(remote);logs=m.logs;kHist=m.kHist;sHist=m.sHist;oHist=m.oHist;fHist=m.fHist;tHist=m.tHist;synHist=m.synHist;sentMsgs=m.sentMsgs;sentPeople=m.sentPeople;sentConvs=m.sentConvs;fundHist=m.fundHist;if(m.savedJokes)savedJokes=m.savedJokes;if(m.imageHist)imageHist=m.imageHist;if(m.mediaList)mediaList=m.mediaList;if(m.mediaFardig)mediaFardig=m.mediaFardig;}await driveWrite();saveLocal();setSyncBtn("ok","Synkad");setTimeout(function(){setSyncBtn("","Synka");},3000);hdr();render();}catch(e){setSyncBtn("err","Synk misslyckades");setTimeout(function(){setSyncBtn("","Synka");},3000);}}
+function mergeData(r){function ma(a,b){var m=new Map();(a||[]).concat(b||[]).forEach(function(x){m.set(String(x.id||x.timestamp),x);});return Array.from(m.values()).sort(function(a,b){return new Date(b.timestamp)-new Date(a.timestamp);});}return{logs:ma(logs,r.logs),kHist:ma(kHist,r.kHist),sHist:ma(sHist,r.sHist),oHist:ma(oHist,r.oHist||[]),fHist:ma(fHist,r.fHist||[]),tHist:ma(tHist,r.tHist||[]),synHist:ma(synHist,r.synHist||[]),sentMsgs:ma(sentMsgs,r.sentMsgs||[]),sentPeople:ma(sentPeople,r.sentPeople||[]),sentConvs:ma(sentConvs,r.sentConvs||[]),fundHist:ma(fundHist,r.fundHist||[]),savedJokes:r.savedJokes||savedJokes,imageHist:r.imageHist||imageHist,mediaList:r.mediaList||mediaList,mediaFardig:r.mediaFardig||mediaFardig};}
+async function driveRead(){if(!driveFileId){var r=await fetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='"+FILE_NAME+"'&fields=files(id)",{headers:{Authorization:"Bearer "+accessToken}});var d=await r.json();if(d.files&&d.files.length>0){driveFileId=d.files[0].id;localStorage.setItem("drive_fid",driveFileId);}else return null;}var r2=await fetch("https://www.googleapis.com/drive/v3/files/"+driveFileId+"?alt=media",{headers:{Authorization:"Bearer "+accessToken}});if(!r2.ok){driveFileId=null;localStorage.removeItem("drive_fid");return null;}return await r2.json();}
+async function driveWrite(){var body=JSON.stringify({logs:logs,kHist:kHist,sHist:sHist,oHist:oHist,fHist:fHist,tHist:tHist,synHist:synHist,sentMsgs:sentMsgs,sentPeople:sentPeople,sentConvs:sentConvs,fundHist:fundHist,savedJokes:savedJokes,imageHist:imageHist,mediaList:mediaList,mediaFardig:mediaFardig});if(driveFileId){await fetch("https://www.googleapis.com/upload/drive/v3/files/"+driveFileId+"?uploadType=media",{method:"PATCH",headers:{Authorization:"Bearer "+accessToken,"Content-Type":"application/json"},body:body});}else{var form=new FormData();form.append("metadata",new Blob([JSON.stringify({name:FILE_NAME,parents:["appDataFolder"]})],{type:"application/json"}));form.append("file",new Blob([body],{type:"application/json"}));var r=await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",{method:"POST",headers:{Authorization:"Bearer "+accessToken},body:form});var d2=await r.json();driveFileId=d2.id;localStorage.setItem("drive_fid",driveFileId);}}
+async function saveAndSync(){saveLocal();try{await driveWrite();setSyncBtn("ok","Sparad");setTimeout(function(){setSyncBtn("","Synka");},2000);}catch(e){setSyncBtn("err","Synk misslyckades");setTimeout(function(){setSyncBtn("","Synka");},3000);}}
+async function init(){loadLocal();var savedToken=localStorage.getItem("akt_token");var tokenTime=parseInt(localStorage.getItem("token_time")||"0");if(savedToken&&(Date.now()-tokenTime)<55*60*1000){accessToken=savedToken;var ok=await checkToken();if(ok){if(!userInfo)await fetchUserInfo();showApp();syncNow();return;}}localStorage.removeItem("akt_token");localStorage.removeItem("token_time");var dbg=document.getElementById("debug-msg");if(dbg)dbg.textContent="Redirect URI: "+REDIRECT_URI;showLogin();}
+async function aiCall(system,userMsg,maxTokens){
+  var ctx=buildContext();
+  return fetch(PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:selectedModel,max_tokens:maxTokens,messages:[{role:"system",content:system+ctx},{role:"user",content:userMsg}]})});
+}
+async function aiChat(system,messages,maxTokens){
+  var ctx=buildContext();
+  return fetch(PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:selectedModel,max_tokens:maxTokens,messages:[{role:"system",content:system+ctx}].concat(messages)})});
+}
+function aiText(data){
+  // Standard OpenAI/Anthropic format
+  if(data.choices&&data.choices[0]){
+    var msg=data.choices[0].message;
+    if(msg){
+      // Some models return content as string
+      if(typeof msg.content==="string"&&msg.content)return msg.content;
+      // Some models (Gemini) return content as array of parts
+      if(Array.isArray(msg.content)){
+        return msg.content.map(function(p){return p.text||p.content||"";}).join("");
+      }
+    }
+    // Fallback: text field directly on choice
+    if(data.choices[0].text)return data.choices[0].text;
+  }
+  // Gemini native format fallback
+  if(data.candidates&&data.candidates[0]){
+    var c=data.candidates[0];
+    if(c.content&&c.content.parts)return c.content.parts.map(function(p){return p.text||"";}).join("");
+  }
+  return "";
+}
+function hdr(){document.getElementById("htitle").textContent="AI-Assistent";}
+
+function buildContext(){
+  var parts=[];
+
+  // Aktiviteter (senaste 30)
+  if(logs.length){
+    parts.push("=== AKTIVITETER (senaste) ===");
+    logs.slice(0,30).forEach(function(l){
+      var ct=CATS.find(function(c){return c.id===l.category;});
+      var line="["+fd(l.timestamp)+"] "+(ct?ct.label:l.category)+": "+l.activity;
+      if(l.time)line+=" ("+l.time+")";
+      if(l.note)line+=" - "+l.note;
+      parts.push(line);
+    });
+  }
+
+  // Funderingar (senaste 20)
+  if(fundHist.length){
+    parts.push("\n=== FUNDERINGAR (senaste) ===");
+    fundHist.slice(0,20).forEach(function(f){
+      parts.push("["+fd(f.timestamp)+"] "+f.text);
+    });
+  }
+
+  // Samtal - personer och konversationer (senaste 20 meddelanden)
+  if(sentPeople.length){
+    parts.push("\n=== SAMTAL ===");
+    sentPeople.forEach(function(p){
+      var convs=sentConvs.filter(function(cv){return cv.personId===p.id;});
+      if(!convs.length)return;
+      parts.push("Person: "+p.name);
+      convs.slice(0,3).forEach(function(cv){
+        var msgs=sentMsgs.filter(function(m){return m.convId===cv.id;}).slice(-10);
+        if(!msgs.length)return;
+        parts.push("  Konversation: "+cv.title+(cv.type?" ("+cv.type+")":""));
+        msgs.forEach(function(m){
+          parts.push("    "+(m.sender==="me"?"Jag":p.name)+": "+m.text);
+        });
+      });
+    });
+  }
+
+  if(!parts.length)return "";
+  return "\n\nAnvandarens kontext fran AI-Assistent-appen:\n"+parts.join("\n")+"\n\nAnvand denna kontext for att ge mer personliga och relevanta svar. Referera till den nar det ar lampligt men tvinga inte in den i varje svar.";
+}
+function setView(v){view=v;document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("on",t.dataset.v===v);});}
+function render(){
+  hdr();
+  if(view==="log")renderLog();
+  else if(view==="history")renderHistory();
+  else if(view==="komm")renderKomm();
+  else if(view==="forklara")renderForklara();
+  else if(view==="terapi")renderTerapi();
+  else if(view==="tips")renderTips();
+  else if(view==="installningar")renderInstallningar();
+}
+function ctxChips(list,current,attr){
+  return list.map(function(c){return "<button class='ctx-chip"+(c===current?" on":"")+"' data-"+attr+"='"+esc(c)+"'>"+esc(c)+"</button>";}).join("");
+}
+function bindChips(b,attr,getCurrent,setCurrent){
+  b.querySelectorAll("[data-"+attr+"]").forEach(function(btn){btn.onclick=function(){setCurrent(btn.dataset[attr]);b.querySelectorAll("[data-"+attr+"]").forEach(function(x){x.classList.toggle("on",x.dataset[attr]===getCurrent());});};});
+}
+function histRow(h,i,attr,labelHtml){
+  return "<div class='khist' style='display:flex;align-items:flex-start;gap:8px' data-"+attr+"='"+i+"'>"
+    +"<div style='flex:1;min-width:0'><div class='kmsg'>"+esc(h.original||h.idea||h.question||h.summary||"")+"</div>"
+    +"<div class='kmeta'>"+labelHtml+"<span>"+fd(h.timestamp)+"</span></div></div>"
+    +"<button class='delbtn' data-del"+attr+"='"+i+"' style='flex-shrink:0;font-size:18px;padding:0 2px'>x</button>"
+    +"</div>";
+}
+function bindHist(b,attr,clickFn,delFn){
+  b.querySelectorAll("[data-"+attr+"]").forEach(function(el){el.onclick=function(e){if(!e.target.dataset["del"+attr])clickFn(Number(el.dataset[attr]));};});
+  b.querySelectorAll("[data-del"+attr+"]").forEach(function(btn){btn.onclick=function(e){e.stopPropagation();delFn(Number(btn.dataset["del"+attr]));};});
+}
+
+// ---- LOGGA ----
+var logSubview="aktivitet";
+
+function renderLog(){
+  var b=document.getElementById("body");
+  var subTabs="<div style='display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:20px'>"
+    +"<button class='mode-btn"+(logSubview==="aktivitet"?" on":"")+"' data-logsub='aktivitet' style='font-size:11px'>Aktivitet</button>"
+    +"<button class='mode-btn"+(logSubview==="skickade"?" on":"")+"' data-logsub='skickade' style='font-size:11px'>Samtal</button>"
+    +"<button class='mode-btn"+(logSubview==="funderingar"?" on":"")+"' data-logsub='funderingar' style='font-size:11px'>Funderingar</button>"
+    +"<button class='mode-btn"+(logSubview==="media"?" on":"")+"' data-logsub='media' style='font-size:11px'>Media</button>"
+    +"</div>";
+  b.innerHTML=subTabs+"<div id='log-content'></div>";
+  b.querySelectorAll("[data-logsub]").forEach(function(btn){
+    btn.onclick=function(){logSubview=btn.dataset.logsub;renderLog();};
+  });
+  if(logSubview==="aktivitet")renderLogAktivitet();
+  else if(logSubview==="skickade")renderLogSkickade();
+  else if(logSubview==="media")renderLogMedia();
+  else renderLogFunderingar();
+}
+
+var openStatCat=null;
+var handelserType="aktivitet";
+
+function getTodayRange(){
+  var now=new Date();
+  var start=new Date(now);start.setHours(0,0,0,0);
+  var end=new Date(now);end.setHours(23,59,59,999);
+  return {start:start,end:end};
+}
+
+function buildHandelser(){
+  var wr=getTodayRange();
+  var typeChips="<div style='display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:14px'>"
+    +"<button class='mode-btn"+(handelserType==="aktivitet"?" on":"")+"' data-handtype='aktivitet' style='padding:8px 4px;font-size:11px'>Aktivitet</button>"
+    +"<button class='mode-btn"+(handelserType==="samtal"?" on":"")+"' data-handtype='samtal' style='padding:8px 4px;font-size:11px'>Samtal</button>"
+    +"<button class='mode-btn"+(handelserType==="funderingar"?" on":"")+"' data-handtype='funderingar' style='padding:8px 4px;font-size:11px'>Funderingar</button>"
+    +"<button class='mode-btn"+(handelserType==="bilder"?" on":"")+"' data-handtype='bilder' style='padding:8px 4px;font-size:11px'>Bilder</button>"
+    +"</div>";
+
+  var html="<div class='lbl'>Handelser</div>"+typeChips;
+
+  if(handelserType==="aktivitet"){
+    var todayLogs=logs.length?logs.slice().sort(function(a,b){return new Date(b.timestamp)-new Date(a.timestamp);}):[];
+    if(!todayLogs.length){html+="<div class='empty' style='padding:20px 0'>Inga aktiviteter loggade.</div>";return html;}
+    html+="<div style='background:#0c1119;border:1px solid #141d27;border-radius:10px;padding:8px 12px;'>"
+      +todayLogs.map(function(l){
+        var ct=CATS.find(function(c){return c.id===l.category;});
+        var hasImg=imageHist.some(function(i){return i.logId===l.id;});
+        return "<div data-jumplog='"+l.id+"' style='padding:8px 0;border-bottom:1px solid #141d27;cursor:pointer;display:flex;align-items:center;gap:10px'>"
+          +"<span style='font-size:18px;flex-shrink:0'>"+(ct?ct.e:"✨")+"</span>"
+          +"<div style='flex:1;min-width:0'>"
+          +"<div style='font-size:13px;color:#e4ecf7'>"+esc(l.activity)+(hasImg?" <span style='font-size:11px;color:#4a5563'>(Bild)</span>":"")+"</div>"
+          +(l.time?"<div style='font-size:11px;color:#00d4ff;margin-top:1px'>"+esc(l.time)+"</div>":"")
+          +"<div style='font-size:10px;color:#4a5563;margin-top:1px'>"+fd(l.timestamp)+"</div>"
+          +"</div>"
+          +"<span style='font-size:11px;color:#6b7785;flex-shrink:0;text-align:right'>"+(ct?ct.label:"")+"</span>"
+          +"</div>";
+      }).join("")
+      +"</div>";
+  } else if(handelserType==="samtal"){
+    var weekConvs=sentConvs.filter(function(cv){var t=new Date(cv.timestamp);return t>=wr.start&&t<=wr.end;});
+    if(!weekConvs.length){html+="<div class='empty' style='padding:20px 0'>Inga samtal idag.</div>";return html;}
+    weekConvs.forEach(function(cv){
+      var person=sentPeople.find(function(p){return p.id===cv.personId;});
+      var msgs=sentMsgs.filter(function(m){return m.convId===cv.id;});
+      html+="<div data-jumpconv='"+cv.id+"' style='cursor:pointer;padding:10px 14px;background:#0c1119;border:1px solid #141d27;border-radius:10px;margin-bottom:8px;display:flex;align-items:center;gap:10px'>"
+        +"<span style='font-size:18px'>💬</span><div style='flex:1;min-width:0'>"
+        +"<div style='font-size:13px;color:#e4ecf7;font-weight:500'>"+esc(person?person.name:"Okand")+"</div>"
+        +"<div style='font-size:12px;color:#6b7785;margin-top:2px'>"+esc(cv.title)+"</div>"
+        +"<div style='font-size:10px;color:#4a5563;margin-top:2px'>"+fd(cv.timestamp)+" · "+msgs.length+" meddelanden</div></div>"
+        +"<span style='font-size:13px;color:#6b7785'>&#8594;</span></div>";
+    });
+  } else if(handelserType==="funderingar"){
+    var weekFund=fundHist.filter(function(f){var t=new Date(f.timestamp);return t>=wr.start&&t<=wr.end;});
+    if(!weekFund.length){html+="<div class='empty' style='padding:20px 0'>Inga funderingar idag.</div>";return html;}
+    weekFund.forEach(function(f){
+      var preview=f.text.length>60?f.text.slice(0,60)+"...":f.text;
+      html+="<div data-jumpfund='"+f.id+"' style='cursor:pointer;padding:10px 14px;background:#0c1119;border:1px solid #141d27;border-radius:10px;margin-bottom:8px;display:flex;align-items:center;gap:10px'>"
+        +"<span style='font-size:18px'>💭</span><div style='flex:1;min-width:0'>"
+        +"<div style='font-size:13px;color:#e4ecf7'>"+esc(preview)+"</div>"
+        +"<div style='font-size:10px;color:#4a5563;margin-top:4px'>"+fd(f.timestamp)+"</div></div>"
+        +"<span style='font-size:13px;color:#6b7785'>&#8594;</span></div>";
+    });
+  } else if(handelserType==="bilder"){
+    var todayImgs=imageHist.filter(function(i){var t=new Date(i.timestamp);return t>=wr.start&&t<=wr.end;});
+    if(!todayImgs.length){html+="<div class='empty' style='padding:20px 0'>Inga bilder idag.</div>";return html;}
+    todayImgs.forEach(function(img){
+      var dataUrl="data:"+(img.mtype||"image/jpeg")+";base64,"+img.base64;
+      html+="<div data-jumpimg='"+img.id+"' style='background:#0c1119;border:1px solid #141d27;border-radius:10px;overflow:hidden;margin-bottom:10px;cursor:pointer'>"
+        +"<img src='"+dataUrl+"' style='width:100%;max-height:180px;object-fit:cover;display:block'/>"
+        +"<div style='padding:8px 12px;font-size:12px;color:#e4ecf7'>"+esc(img.activity||"")+"</div>"
+        +"</div>";
+    });
+  }
+  return html;
+}
+
+function renderLogAktivitet(){
+  var c=document.getElementById("log-content");
+  var catChips=CATS.map(function(ct){return "<button class='chip"+(ct.id===cat?" on":"")+"' data-cat='"+ct.id+"'>"+ct.e+" "+ct.label+"</button>";}).join("");
+  var stats="<div class='mt20'>"+buildHandelser()+"</div>";
+
+  c.innerHTML="<div class='lbl'>Kategori</div><div class='chips'>"+catChips+"</div>"
+    +"<div class='lbl'>Aktivitet</div>"
+    +"<div class='row'><input class='inp' id='ci' placeholder='Vad gjorde du?'/><button class='abtn' id='addbtn'>+</button></div>"
+    +"<div class='lbl'>Tid</div>"
+    +"<div id='timebtns' style='display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px'>"
+    +"<button class='chip' data-tid='10m'>10m</button>"
+    +"<button class='chip' data-tid='30m'>30m</button>"
+    +"<button class='chip' data-tid='1h'>1h</button>"
+    +"<button class='chip' data-tid='3h'>3h</button>"
+    +"<button class='chip' data-tid='8h'>8h</button>"
+    +"<button class='chip' data-tid='12h'>12h</button>"
+    +"<button class='chip' data-tid='1d'>1d</button>"
+    +"<button class='chip' data-tid='Oviktigt'>Oviktigt</button>"
+    +"</div>"
+    +"<input type='hidden' id='ti' value=''>"
+    +"<div class='lbl'>Plats (valfritt)</div>"
+    +"<input class='inp w100' id='pi' placeholder='T.ex. Gymmet, Hemma, Stockholm...' style='margin-bottom:10px'/>"
+    +"<div class='lbl'>Anteckning (valfritt)</div>"
+    +"<input class='inp w100' id='ni' placeholder='Egna tankar eller kommentarer...'/>"
+    +"<div class='lbl mt8'>Bild (valfritt)</div>"
+    +"<label style='display:block;padding:10px;background:#0c1119;border:1px dashed #1c2733;border-radius:10px;text-align:center;cursor:pointer;font-size:13px;color:#6b6880;margin-bottom:10px'>"
+    +"📷 Ladda upp bild till aktiviteten"
+    +"<input type='file' id='imgfile' accept='image/*' multiple style='display:none'/></label>"
+    +"<div id='imgpreview'></div>"
+    +"<div id='imgonly-form' style='display:none'>"
+    +"<div class='lbl'>Titel på bilden</div>"
+    +"<input class='inp w100' id='imgonly-title' placeholder='Skriv en titel...' style='margin-bottom:8px'/>"
+    +"<button class='sec ghost' id='saveimgonly' style='width:100%;margin-bottom:10px'>Spara bara bilden</button>"
+    +"</div>"
+    +"<div id='fz'></div>"+stats;
+  c.querySelectorAll(".chip[data-cat]").forEach(function(btn){btn.onclick=function(){cat=btn.dataset.cat;renderLogAktivitet();};});
+  var selectedTid='';
+  c.querySelectorAll("[data-tid]").forEach(function(btn){
+    btn.onclick=function(){
+      selectedTid=selectedTid===btn.dataset.tid?'':btn.dataset.tid;
+      c.querySelectorAll("[data-tid]").forEach(function(b){b.classList.toggle('on',b.dataset.tid===selectedTid);});
+      var ti=document.getElementById('ti');if(ti)ti.value=selectedTid;
+    };
+  });
+  c.querySelectorAll("[data-handtype]").forEach(function(btn){
+    btn.onclick=function(){handelserType=btn.dataset.handtype;openStatCat=null;renderLogAktivitet();};
+  });
+  c.querySelectorAll("[data-jumplog]").forEach(function(el){
+    el.onclick=function(e){e.stopPropagation();jumpToLogInHistory(Number(el.dataset.jumplog));};
+  });
+  c.querySelectorAll("[data-jumpconv]").forEach(function(el){
+    el.onclick=function(){jumpToConvInHistory(el.dataset.jumpconv);};
+  });
+  c.querySelectorAll("[data-jumpfund]").forEach(function(el){
+    el.onclick=function(){jumpToFundInHistory(Number(el.dataset.jumpfund));};
+  });
+  c.querySelectorAll("[data-jumpimg]").forEach(function(el){
+    el.onclick=function(){jumpToImgInHistory(Number(el.dataset.jumpimg));};
+  });
+  ci.onkeydown=function(e){if(e.key==="Enter"&&ci.value.trim())addAct(ci.value.trim());};
+  c.querySelector("#addbtn").onclick=function(){if(ci.value.trim())addAct(ci.value.trim());};
+  // Image preview (multi)
+  var imgfile=c.querySelector("#imgfile");
+  if(imgfile){
+    imgfile.onchange=function(){
+      if(!imgfile.files||!imgfile.files.length)return;
+      var files=Array.from(imgfile.files);
+      pendingImgs=new Array(files.length);
+      var prev=c.querySelector("#imgpreview");
+      if(prev)prev.innerHTML="";
+      var loaded=0;
+      files.forEach(function(file,fi){
+        var reader=new FileReader();
+        reader.onload=function(e){
+          var dataUrl=e.target.result;
+          pendingImgs[fi]={base64:dataUrl.split(",")[1],mtype:file.type||"image/jpeg"};
+          loaded++;
+          if(prev){
+            var img=document.createElement("img");
+            img.src=dataUrl;
+            img.style.cssText="width:100%;border-radius:10px;margin-bottom:6px;max-height:160px;object-fit:cover;display:block";
+            prev.appendChild(img);
+          }
+          if(loaded===files.length){
+            // All loaded — set first as pendingImgBase64 for addAct compatibility
+            pendingImgBase64=pendingImgs[0].base64;
+            pendingImgType=pendingImgs[0].mtype;
+            var imgForm=c.querySelector("#imgonly-form");
+            if(imgForm)imgForm.style.display="block";
+            var rb=document.createElement("button");
+            rb.style.cssText="font-size:11px;color:#f87171;background:none;border:none;cursor:pointer;margin-bottom:8px;display:block";
+            rb.textContent="✕ Ta bort "+(files.length>1?files.length+" bilder":"bild");
+            rb.onclick=function(){
+              pendingImgBase64=null;pendingImgType=null;pendingImgs=[];
+              if(prev)prev.innerHTML="";
+              var imgForm2=c.querySelector("#imgonly-form");
+              if(imgForm2)imgForm2.style.display="none";
+              imgfile.value="";
+            };
+            if(prev)prev.appendChild(rb);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    };
+  }
+  var saveImgOnly=c.querySelector("#saveimgonly");
+  if(saveImgOnly){
+    saveImgOnly.onclick=function(){
+      var imgs=pendingImgs&&pendingImgs.length?pendingImgs:(pendingImgBase64?[{base64:pendingImgBase64,mtype:pendingImgType||"image/jpeg"}]:[]);
+      if(!imgs.length)return;
+      var titleInput=c.querySelector("#imgonly-title");
+      var titleVal=titleInput?titleInput.value.trim():"";
+      var ciVal=c.querySelector("#ci")?c.querySelector("#ci").value.trim():"";
+      var baseTitle=titleVal||ciVal||"Bild";
+      var now=Date.now();
+      imgs.forEach(function(img,i){
+        var title=imgs.length===1?baseTitle:baseTitle+(i+1);
+        imageHist.unshift({id:now+i,logId:null,activity:title,category:cat,base64:img.base64,mtype:img.mtype,timestamp:new Date(now+i).toISOString()});
+      });
+      pendingImgBase64=null;pendingImgType=null;pendingImgs=[];
+      saveAndSync();
+      var fz=c.querySelector("#fz");
+      if(fz){fz.innerHTML="<div class='ok-toast'>"+(imgs.length>1?imgs.length+" bilder sparade!":"Bild sparad!")+"</div>";setTimeout(function(){if(fz)fz.innerHTML="";},2200);}
+      renderLogAktivitet();
+    };
+  }
+}
+var pendingImgBase64=null,pendingImgType=null,pendingImgs=[];
+
+function addAct(activity){
+  var ni=document.querySelector("#ni");
+  var ti=document.querySelector("#ti");
+  var pi=document.querySelector("#pi");
+  var logId=Date.now();
+  logs.unshift({id:logId,category:cat,activity:activity,time:ti?ti.value.trim():"",place:pi?pi.value.trim():"",note:ni?ni.value.trim():"",timestamp:new Date().toISOString()});
+  if(pendingImgBase64){
+    imageHist.unshift({id:logId+1,logId:logId,activity:activity,base64:pendingImgBase64,mtype:pendingImgType||"image/jpeg",timestamp:new Date().toISOString()});
+    pendingImgBase64=null;pendingImgType=null;
+  }
+  saveAndSync();hdr();renderLogAktivitet();
+  var fz=document.getElementById("fz");
+  if(fz){fz.innerHTML="<div class='ok-toast'>Loggad: "+esc(activity)+"</div>";setTimeout(function(){if(fz)fz.innerHTML="";},2200);}
+}
+
+// ---- SKICKADE MEDDELANDEN ----
+var sentDraft="", sentResult=null, sentLoading=false;
+var newConvType="skrivande", imgProcessing=false;
+var fundDraft="", editingFundId=null;
+
+// people: [{id,name,timestamp}]
+// conversations: [{id,personId,title,timestamp}]
+// sentMsgs reused as conversation messages: [{id,convId,sender,text,timestamp}]  sender: "me" | "them"
+var sentPeople=[], sentConvs=[];
+var sentView="people"; // people | convlist | chat | analysis
+var activePersonId=null, activeConvId=null;
+var newPersonName="", newConvTitle="", chatDraft="", chatSender="me";
+var skrivAnalysScope="conv", skrivAnalysResult=null, skrivAnalysLoading=false;
+
+function renderLogSkickade(){
+  var c=document.getElementById("log-content");
+  if(sentView==="people")return renderSkickadePeople(c);
+  if(sentView==="convlist")return renderSkickadeConvList(c);
+  if(sentView==="chat")return renderSkickadeChat(c);
+}
+
+function renderSkickadePeople(c){
+  var list=sentPeople.length?sentPeople.map(function(p){
+    var convCount=sentConvs.filter(function(cv){return cv.personId===p.id;}).length;
+    return "<div class='khist' style='display:flex;align-items:center;gap:8px' data-person='"+p.id+"'>"
+      +"<div style='flex:1;min-width:0'><div class='kmsg' style='white-space:normal;font-weight:600'>"+esc(p.name)+"</div>"
+      +"<div class='kmeta'><span class='kbadge'>"+convCount+" konversationer</span></div></div>"
+      +"<button class='delbtn' data-delperson='"+p.id+"' style='flex-shrink:0;font-size:18px;padding:0 2px'>x</button>"
+      +"</div>";
+  }).join(""):"<div class='empty' style='padding:30px 0'><div class='eico'>👥</div>Inga personer annu.</div>";
+
+  c.innerHTML="<div style='font-size:13px;color:#6b6880;margin-bottom:16px;line-height:1.5'>Spara konversationer med olika personer for att fa insikter om hur du skriver.</div>"
+    +"<div class='row'><input class='inp' id='newperson' placeholder='Namn pa person...' value='"+esc(newPersonName)+"'/><button class='abtn' id='addperson'>+</button></div>"
+    +"<div class='mt20'><div class='lbl'>Personer</div>"+list+"</div>";
+
+  var pi=c.querySelector("#newperson");
+  pi.oninput=function(){newPersonName=pi.value;};
+  pi.onkeydown=function(e){if(e.key==="Enter"&&pi.value.trim())addPerson(pi.value.trim());};
+  c.querySelector("#addperson").onclick=function(){var v=c.querySelector("#newperson").value.trim();if(v)addPerson(v);};
+
+  c.querySelectorAll("[data-person]").forEach(function(el){
+    el.onclick=function(e){if(e.target.dataset.delperson)return;activePersonId=el.dataset.person;sentView="convlist";renderLogSkickade();};
+  });
+  c.querySelectorAll("[data-delperson]").forEach(function(btn){
+    btn.onclick=function(e){
+      e.stopPropagation();
+      var pid=btn.dataset.delperson;
+      var convIds=sentConvs.filter(function(cv){return cv.personId===pid;}).map(function(cv){return cv.id;});
+      sentConvs=sentConvs.filter(function(cv){return cv.personId!==pid;});
+      sentMsgs=sentMsgs.filter(function(m){return convIds.indexOf(m.convId)===-1;});
+      sentPeople=sentPeople.filter(function(p){return p.id!==pid;});
+      saveAndSync();renderLogSkickade();
+    };
+  });
+}
+
+function addPerson(name){
+  var p={id:String(Date.now()),name:name,timestamp:new Date().toISOString()};
+  sentPeople.unshift(p);newPersonName="";saveAndSync();renderLogSkickade();
+}
+
+function renderSkickadeConvList(c){
+  var person=sentPeople.find(function(p){return p.id===activePersonId;});
+  if(!person){sentView="people";return renderLogSkickade();}
+  var convs=sentConvs.filter(function(cv){return cv.personId===activePersonId;});
+  var list=convs.length?convs.map(function(cv){
+    var msgCount=sentMsgs.filter(function(m){return m.convId===cv.id;}).length;
+    var typeLabel=cv.type==="muntlig"?"🎙️ Muntlig":"💬 Skrivande";
+    return "<div class='khist' style='display:flex;align-items:center;gap:8px' data-conv='"+cv.id+"'>"
+      +"<div style='flex:1;min-width:0'><div class='kmsg' style='white-space:normal'>"+esc(cv.title)+"</div>"
+      +"<div class='kmeta'><span class='kbadge'>"+typeLabel+"</span><span class='kbadge'>"+msgCount+" msg</span><span>"+fd(cv.timestamp)+"</span></div></div>"
+      +"<button class='delbtn' data-delconv='"+cv.id+"' style='flex-shrink:0;font-size:18px;padding:0 2px'>x</button>"
+      +"</div>";
+  }).join(""):"<div class='empty' style='padding:30px 0'><div class='eico'>💬</div>Inga konversationer annu.</div>";
+
+  c.innerHTML="<button class='sec ghost' id='backpeople' style='margin-bottom:16px'>&#8592; Alla personer</button>"
+    +"<div class='lbl'>"+esc(person.name)+"</div>"
+    +"<div class='lbl'>Typ av konversation</div>"
+    +"<div style='display:flex;gap:8px;margin-bottom:12px'>"
+    +"<button class='mode-btn"+(newConvType==="skrivande"?" on":"")+"' data-convtype='skrivande' style='flex:1'>💬 Skrivande</button>"
+    +"<button class='mode-btn"+(newConvType==="muntlig"?" on":"")+"' data-convtype='muntlig' style='flex:1'>🎙️ Muntlig</button>"
+    +"</div>"
+    +"<div class='row'><input class='inp' id='newconv' placeholder='Titel pa konversation...' value='"+esc(newConvTitle)+"'/><button class='abtn' id='addconv'>+</button></div>"
+    +(convs.length>=1?"<button class='sec ghost mt12' id='analyseperson'>"+(skrivAnalysLoading&&skrivAnalysScope==="person"?"Analyserar...":"Analysera alla konversationer med "+esc(person.name))+"</button>":"")
+    +(skrivAnalysResult&&skrivAnalysScope==="person"?"<div class='mt20'><div class='lbl'>Analys</div><div class='tbox'>"+esc(skrivAnalysResult)+"</div></div>":"")
+    +"<div class='mt20'><div class='lbl'>Konversationer</div>"+list+"</div>";
+
+  c.querySelector("#backpeople").onclick=function(){sentView="people";activePersonId=null;skrivAnalysResult=null;renderLogSkickade();};
+  var ci=c.querySelector("#newconv");
+  ci.oninput=function(){newConvTitle=ci.value;};
+  ci.onkeydown=function(e){if(e.key==="Enter"&&ci.value.trim())addConv(ci.value.trim());};
+  c.querySelector("#addconv").onclick=function(){var v=c.querySelector("#newconv").value.trim();if(v)addConv(v);};
+  c.querySelectorAll("[data-convtype]").forEach(function(btn){
+    btn.onclick=function(){newConvType=btn.dataset.convtype;c.querySelectorAll("[data-convtype]").forEach(function(x){x.classList.toggle("on",x.dataset.convtype===newConvType);});};
+  });
+
+  var ap=c.querySelector("#analyseperson");
+  if(ap&&!skrivAnalysLoading)ap.onclick=function(){doAnalyseSkrivstil("person");};
+
+  c.querySelectorAll("[data-conv]").forEach(function(el){
+    el.onclick=function(e){if(e.target.dataset.delconv)return;activeConvId=el.dataset.conv;sentView="chat";renderLogSkickade();};
+  });
+  c.querySelectorAll("[data-delconv]").forEach(function(btn){
+    btn.onclick=function(e){
+      e.stopPropagation();
+      var cid=btn.dataset.delconv;
+      sentMsgs=sentMsgs.filter(function(m){return m.convId!==cid;});
+      sentConvs=sentConvs.filter(function(cv){return cv.id!==cid;});
+      saveAndSync();renderLogSkickade();
+    };
+  });
+}
+
+function addConv(title){
+  var cv={id:String(Date.now()),personId:activePersonId,title:title,type:newConvType,timestamp:new Date().toISOString()};
+  sentConvs.unshift(cv);newConvTitle="";activeConvId=cv.id;sentView="chat";saveAndSync();renderLogSkickade();
+}
+
+function renderSkickadeChat(c){
+  var conv=sentConvs.find(function(cv){return cv.id===activeConvId;});
+  if(!conv){sentView="convlist";return renderLogSkickade();}
+  var person=sentPeople.find(function(p){return p.id===conv.personId;});
+  var msgs=sentMsgs.filter(function(m){return m.convId===activeConvId;});
+  var isMuntlig=conv.type==="muntlig";
+  var sortedMsgs=msgs.slice().sort(function(a,b){return new Date(a.timestamp)-new Date(b.timestamp);});
+
+  var msgHtml="";
+  if(!sortedMsgs.length){
+    msgHtml="<div class='empty' style='padding:24px 0'><div class='eico'>"+(isMuntlig?"🎙️":"💬")+"</div>Inga meddelanden annu.</div>";
+  } else if(isMuntlig){
+    // Transcript style
+    msgHtml="<div id='chatarea' style='max-height:360px;overflow-y:auto;background:#0c1119;border-radius:12px;border:1px solid #141d27;padding:12px;margin-bottom:4px;'>"
+      +sortedMsgs.map(function(m){
+        var who=m.sender==="me"?"Jag":esc(person?person.name:"De");
+        var color=m.sender==="me"?"#00d4ff":"#a0aec0";
+        var delBtn="<button data-delmsg='"+m.id+"' style='background:none;border:none;color:#4a5563;cursor:pointer;font-size:12px;padding:0 4px;'>x</button>";
+        return "<div style='margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #141d27'>"
+          +"<div style='display:flex;align-items:center;gap:6px;margin-bottom:4px'>"
+          +"<span style='font-size:11px;font-weight:600;color:"+color+"'>"+who+"</span>"
+          +"<span style='font-size:10px;color:#4a5563'>"+fd(m.timestamp)+"</span>"
+          +delBtn+"</div>"
+          +"<div style='font-size:13px;color:#e4ecf7;line-height:1.5;white-space:pre-wrap'>"+esc(m.text)+"</div>"
+          +"</div>";
+      }).join("")
+      +"</div>";
+  } else {
+    // Chat bubble style
+    msgHtml="<div class='chat-area' id='chatarea' style='max-height:360px;overflow-y:auto;'>"
+      +sortedMsgs.map(function(m){
+        var delBtn="<button data-delmsg='"+m.id+"' style='background:none;border:none;color:#6b7785;cursor:pointer;font-size:14px;padding:0 4px;line-height:1;flex-shrink:0'>x</button>";
+        if(m.sender==="me")return "<div style='display:flex;justify-content:flex-end;align-items:flex-end;gap:4px'>"+delBtn+"<div class='bubble-me' style='white-space:pre-wrap'>"+esc(m.text)+"</div></div>";
+        return "<div style='display:flex;justify-content:flex-start;align-items:flex-end;gap:4px'><div class='bubble-them' style='white-space:pre-wrap'>"+esc(m.text)+"</div>"+delBtn+"</div>";
+      }).join("")
+      +"</div>";
+  }
+
+  var typeLabel=isMuntlig?"🎙️ Muntlig":"💬 Skrivande";
+  var uploadSection=imgProcessing
+    ?"<div style='text-align:center;padding:12px;color:#6b6880;font-size:13px'>AI bearbetar..."
+      +"<div class='spnr' style='margin:8px auto'></div></div>"
+    :(!isMuntlig?"<div style='margin-top:10px'>"
+      +"<div class='lbl'>Ladda upp bild for AI-import</div>"
+      +"<label style='display:block;padding:10px;background:#0c1119;border:1px dashed #1c2733;border-radius:10px;text-align:center;cursor:pointer;font-size:13px;color:#6b6880'>"
+      +"📸 Tryck for att ladda upp skarmklipp av konversation"
+      +"<input type='file' id='imgupload' accept='image/*' style='display:none'/></label>"
+      +"</div>":"");
+
+  c.innerHTML="<button class='sec ghost' id='backconv' style='margin-bottom:16px'>&#8592; "+esc(person?person.name:"")+"</button>"
+    +"<div style='display:flex;align-items:center;gap:8px;margin-bottom:12px'>"
+    +"<span style='font-size:13px;color:#e4ecf7;font-weight:500'>"+esc(conv.title)+"</span>"
+    +"<span class='kbadge'>"+typeLabel+"</span>"
+    +"</div>"
+    +msgHtml
+    +"<div class='ctx-chips' style='margin-top:12px'>"
+    +"<button class='ctx-chip"+(chatSender==="me"?" on":"")+"' data-sender='me'>Jag</button>"
+    +"<button class='ctx-chip"+(chatSender==="them"?" on":"")+"' data-sender='them'>"+esc(person?person.name:"De")+"</button>"
+    +"</div>"
+    +"<textarea class='ta' id='chatin' placeholder='"+(isMuntlig?"Klistra in transkript eller skriv...":"Skriv meddelande...")+"' style='min-height:80px'>"+esc(chatDraft)+"</textarea>"
+    +"<button class='abtn' id='chatadd' style='width:100%;border-radius:10px'>Lagg till</button>"
+    +uploadSection
+    +(msgs.length>=2?"<button class='sec ghost mt12' id='analyseconv'>"+(skrivAnalysLoading&&skrivAnalysScope==="conv"?"Analyserar...":"Analysera skrivstil")+"</button>":"")
+    +(skrivAnalysResult&&skrivAnalysScope==="conv"?"<div class='mt20'><div class='lbl'>Analys</div><div class='tbox'>"+esc(skrivAnalysResult)+"</div></div>":"");
+
+  c.querySelector("#backconv").onclick=function(){sentView="convlist";activeConvId=null;skrivAnalysResult=null;renderLogSkickade();};
+  c.querySelectorAll("[data-sender]").forEach(function(btn){
+    btn.onclick=function(){chatSender=btn.dataset.sender;c.querySelectorAll("[data-sender]").forEach(function(x){x.classList.toggle("on",x.dataset.sender===chatSender);});};
+  });
+  var ci2=c.querySelector("#chatin");
+  ci2.oninput=function(){chatDraft=ci2.value;};
+  c.querySelector("#chatadd").onclick=function(){var v=c.querySelector("#chatin").value.trim();if(v)addChatMsg(v);};
+
+  c.querySelectorAll("[data-delmsg]").forEach(function(btn){
+    btn.onclick=function(){sentMsgs=sentMsgs.filter(function(m){return m.id!==btn.dataset.delmsg;});saveAndSync();renderLogSkickade();};
+  });
+
+  // Image upload for Skrivande
+  var imgInput=c.querySelector("#imgupload");
+  if(imgInput){
+    imgInput.onchange=function(){
+      if(imgInput.files&&imgInput.files[0])doImportBild(imgInput.files[0],conv,person);
+    };
+  }
+
+
+  var ac=c.querySelector("#analyseconv");
+  if(ac&&!skrivAnalysLoading)ac.onclick=function(){doAnalyseSkrivstil("conv");};
+  var ca=c.querySelector("#chatarea");if(ca)ca.scrollTop=ca.scrollHeight;
+}
+
+async function doImportBild(file,conv,person){
+  imgProcessing=true;renderLogSkickade();
+  try{
+    var base64=await new Promise(function(res,rej){
+      var r=new FileReader();
+      r.onload=function(){res(r.result.split(",")[1]);};
+      r.onerror=function(){rej(new Error("Filfel"));};
+      r.readAsDataURL(file);
+    });
+    var mtype=file.type||"image/jpeg";
+    var personName=person?person.name:"Den andra personen";
+    var sys='Du ar ett OCR-verktyg. Las av en skarmklipp av en SMS-konversation och returnera BARA giltig JSON: {"messages":[{"sender":"me","text":"..."},...]} Anvand me for avsandaren och them for '+personName+'. Kronologisk ordning.';
+    var res=await fetch(PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:selectedModel,max_tokens:2000,messages:[{role:"system",content:sys},{role:"user",content:[{type:"image",source:{type:"base64",media_type:mtype,data:base64}},{type:"text",text:"Las av konversationen i bilden."}]}]})});
+    var data=await res.json();
+    var raw=aiText(data).replace(/```json|```/g,"").trim();
+    var parsed=JSON.parse(raw);
+    if(parsed.messages&&parsed.messages.length){
+      var now=Date.now();
+      parsed.messages.forEach(function(m,i){
+        sentMsgs.push({id:String(now+i),convId:conv.id,sender:m.sender,text:m.text,timestamp:new Date(now+i).toISOString()});
+      });
+      saveAndSync();
+    }
+  }catch(e){console.error("Bild-import fel:",e);}
+  imgProcessing=false;renderLogSkickade();
+}
+
+function addChatMsg(text){
+  sentMsgs.push({id:String(Date.now()),convId:activeConvId,sender:chatSender,text:text,timestamp:new Date().toISOString()});
+  chatDraft="";saveAndSync();renderLogSkickade();
+}
+
+async function doAnalyseSkrivstil(scope){
+  skrivAnalysScope=scope;skrivAnalysLoading=true;skrivAnalysResult=null;renderLogSkickade();
+  var myMsgs;
+  if(scope==="conv"){
+    myMsgs=sentMsgs.filter(function(m){return m.convId===activeConvId&&m.sender==="me";});
+  }else{
+    var convIds=sentConvs.filter(function(cv){return cv.personId===activePersonId;}).map(function(cv){return cv.id;});
+    myMsgs=sentMsgs.filter(function(m){return convIds.indexOf(m.convId)!==-1&&m.sender==="me";});
+  }
+  if(!myMsgs.length){skrivAnalysResult="Inga av dina egna meddelanden hittades att analysera.";skrivAnalysLoading=false;renderLogSkickade();return;}
+  var sample=myMsgs.slice(0,20).map(function(m,i){return (i+1)+". "+m.text;}).join("\n\n");
+  var sys="Du ar en sprakanalytiker. Analysera personens skrivstil baserat pa deras meddelanden. Beskriv tonfall, ordval, meningslangd, vanliga uttryck och monster. Ge konkreta, konstruktiva observationer pa svenska. Hall det kort - max 150 ord.";
+  try{
+    var res=await aiCall(sys,"Hars meddelandena att analysera:\n\n"+sample,800);
+    var data=await res.json();
+    skrivAnalysResult=aiText(data)||"Kunde inte analysera. Forsok igen.";
+  }catch(e){skrivAnalysResult="Nagot gick fel. Forsok igen.";}
+  skrivAnalysLoading=false;renderLogSkickade();
+}
+
+// ---- FUNDERINGAR ----
+var mediaCat="bok";
+var MEDIA_CATS=[
+  {id:"bok",label:"Bok",e:"📚"},
+  {id:"musik",label:"Musik",e:"🎵"},
+  {id:"film",label:"Film",e:"🎬"},
+  {id:"serie",label:"Serie",e:"📺"},
+  {id:"podcast",label:"Podcast",e:"🎙️"},
+  {id:"videodelning",label:"Videodelning",e:"📹"},
+  {id:"spel",label:"Spel",e:"🎮"},
+  {id:"ovrigt",label:"Övrigt",e:"✨"}
+];
+
+function renderLogMedia(){
+  var c=document.getElementById("log-content");
+  var catChips=MEDIA_CATS.map(function(mc){
+    return "<button class='chip"+(mc.id===mediaCat?" on":"")+"' data-mediacat='"+mc.id+"' style='font-size:12px'>"+mc.e+" "+mc.label+"</button>";
+  }).join("");
+  var items=mediaList[mediaCat]||[];
+  var listHtml=items.length
+    ?"<div style='background:#0c1119;border:1px solid #141d27;border-radius:10px;padding:8px 12px;margin-top:12px'>"
+      +items.map(function(item,i){
+        return "<div style='padding:8px 0;border-bottom:1px solid #141d27;display:flex;align-items:center;gap:8px'>"
+          +"<div data-jumpmed='"+i+"' style='flex:1;font-size:13px;color:#e4ecf7;cursor:pointer'>"+esc(item)+"</div>"
+          +"<button data-delmed='"+i+"' style='background:none;border:none;color:#4a4860;cursor:pointer;font-size:16px;padding:0 4px;flex-shrink:0'>x</button>"
+          +"</div>";
+      }).join("")
+      +"</div>"
+    :"<div style='font-size:13px;color:#4a4860;text-align:center;margin-top:16px;padding:16px'>Inga "+esc(MEDIA_CATS.find(function(m){return m.id===mediaCat;}).label)+" sparade ännu.</div>";
+
+  c.innerHTML="<div class='lbl'>Kategori</div>"
+    +"<div class='chips'>"+catChips+"</div>"
+    +"<div class='lbl'>Lägg till</div>"
+    +"<div class='row'><input class='inp' id='media-inp' placeholder='Namn på media...'/><button class='abtn' id='media-add'>+</button></div>"
+    +"<div id='media-status'></div>"
+    +listHtml;
+
+  c.querySelectorAll("[data-mediacat]").forEach(function(btn){
+    btn.onclick=function(){mediaCat=btn.dataset.mediacat;renderLogMedia();};
+  });
+  var inp=c.querySelector("#media-inp");
+  c.querySelector("#media-add").onclick=function(){
+    var v=inp?inp.value.trim():"";
+    if(!v)return;
+    if(!mediaList[mediaCat])mediaList[mediaCat]=[];
+    mediaList[mediaCat].push(v);
+    inp.value="";
+    saveAndSync();
+    var st=c.querySelector("#media-status");
+    if(st){st.innerHTML="<div class='ok-toast'>Sparat!</div>";setTimeout(function(){if(st)st.innerHTML="";},2000);}
+    renderLogMedia();
+  };
+  if(inp)inp.onkeydown=function(e){if(e.key==="Enter"&&inp.value.trim())c.querySelector("#media-add").onclick();};
+  c.querySelectorAll("[data-delmed]").forEach(function(btn){
+    btn.onclick=function(){
+      var idx=parseInt(btn.dataset.delmed);
+      if(mediaList[mediaCat])mediaList[mediaCat].splice(idx,1);
+      saveAndSync();renderLogMedia();
+    };
+  });
+  c.querySelectorAll("[data-jumpmed]").forEach(function(el){
+    el.onclick=function(){
+      var idx=parseInt(el.dataset.jumpmed);
+      var title=mediaList[mediaCat][idx];
+      historySubview="media";
+      setView("history");
+      renderHistory();
+      // After render, show Klar modal for this item
+      setTimeout(function(){showHistMediaModal(title,idx,mediaCat);},50);
+    };
+  });
+}
+
+function showMediaModal(title,idx){
+  var c=document.getElementById("log-content");
+  var modal=c.querySelector("#media-modal");
+  if(!modal)return;
+  var selectedRating=0;
+  modal.innerHTML="<div style='margin-top:20px;padding:16px;background:#10151f;border-radius:14px;border:1px solid #00d4ff'>"
+    +"<div class='lbl'>Klarmarkera: "+esc(title)+"</div>"
+    +"<div class='lbl' style='margin-top:12px'>Betyg</div>"
+    +"<div id='stars' style='display:flex;gap:8px;margin-bottom:12px'>"
+    +[1,2,3,4,5].map(function(n){return "<button data-star='"+n+"' style='font-size:24px;background:none;border:none;cursor:pointer;opacity:0.4'>★</button>";}).join("")
+    +"</div>"
+    +"<div class='lbl'>Kommentar (valfritt)</div>"
+    +"<textarea class='ta' id='media-comment' placeholder='Vad tyckte du?' style='min-height:70px;margin-bottom:10px'></textarea>"
+    +"<div style='display:flex;gap:8px'>"
+    +"<button class='sec' id='modal-save' style='flex:1'>Spara</button>"
+    +"<button class='sec ghost' id='modal-cancel' style='flex:1'>Avbryt</button>"
+    +"</div>"
+    +"</div>";
+
+  modal.querySelectorAll("[data-star]").forEach(function(star){
+    star.onclick=function(){
+      selectedRating=parseInt(star.dataset.star);
+      modal.querySelectorAll("[data-star]").forEach(function(s){
+        s.style.opacity=parseInt(s.dataset.star)<=selectedRating?"1":"0.3";
+      });
+    };
+  });
+  modal.querySelector("#modal-cancel").onclick=function(){modal.innerHTML="";};
+  modal.querySelector("#modal-save").onclick=function(){
+    var comment=modal.querySelector("#media-comment").value.trim();
+    mediaFardig.push({title:title,cat:mediaCat,rating:selectedRating,comment:comment,timestamp:new Date().toISOString()});
+    mediaList[mediaCat].splice(idx,1);
+    saveAndSync();
+    modal.innerHTML="";
+    renderLogMedia();
+  };
+}
+
+function renderLogFunderingar(){
+  var c=document.getElementById("log-content");
+  var now=new Date();
+  var weekDay=(now.getDay()+6)%7;
+  var weekStart=new Date(now);weekStart.setHours(0,0,0,0);weekStart.setDate(now.getDate()-weekDay);
+  var weekEnd=new Date(weekStart);weekEnd.setDate(weekStart.getDate()+6);weekEnd.setHours(23,59,59,999);
+  var weekFund=fundHist.filter(function(f){var t=new Date(f.timestamp);return t>=weekStart&&t<=weekEnd;});
+  var entries=weekFund.map(function(f){
+    if(editingFundId===f.id){
+      return "<div class='entry' style='flex-direction:column;gap:10px'>"
+        +"<textarea class='ta' id='editfund-"+f.id+"' style='min-height:90px'>"+esc(f.text)+"</textarea>"
+        +"<div style='display:flex;gap:8px'>"
+        +"<button class='sec' id='savefund-"+f.id+"' style='flex:1'>Spara</button>"
+        +"<button class='sec ghost' id='cancelfund-"+f.id+"' style='flex:1'>Avbryt</button>"
+        +"</div></div>";
+    }
+    return "<div class='entry'>"
+      +"<span style='font-size:20px'>💭</span>"
+      +"<div style='flex:1'>"
+      +"<div class='etitle' style='white-space:pre-wrap;font-weight:400;line-height:1.5'>"+esc(f.text)+"</div>"
+      +"<div class='etime'>"+fd(f.timestamp)+"</div>"
+      +"</div>"
+      +"<button class='delbtn' data-editfund='"+f.id+"' style='color:#6b6880;font-size:14px;padding:2px 6px'>✏️</button>"
+      +"<button class='delbtn' data-delfund='"+f.id+"'>x</button>"
+      +"</div>";
+  }).join("");
+
+  c.innerHTML="<div style='font-size:13px;color:#6b6880;margin-bottom:16px;line-height:1.5'>Skriv ner tankar, ideer eller funderingar - en enkel dagbok bara for dig.</div>"
+    +"<textarea class='ta' id='fundin' placeholder='Vad funderar du pa?'>"+esc(fundDraft)+"</textarea>"
+    +"<div style='display:grid;grid-template-columns:1fr 1fr;gap:8px'>"
+    +"<button class='sec' id='fundadd'>Spara fundering</button>"
+    +"<button class='sec ghost' id='skamtadd'>Spara som skämt</button>"
+    +"</div>"
+    +"<div id='fz2'></div>"
+    +(weekFund.length?"<div class='mt20'><div class='lbl'>Denna veckas funderingar</div>"+entries+"</div>":"<div style='font-size:13px;color:#4a4860;margin-top:16px;text-align:center'>Inga funderingar denna vecka annu.</div>");
+
+  var ta=c.querySelector("#fundin");
+  if(ta)ta.oninput=function(){fundDraft=ta.value;};
+  c.querySelector("#fundadd").onclick=function(){
+    var txt=c.querySelector("#fundin").value.trim();
+    if(!txt)return;
+    fundHist.unshift({id:Date.now(),text:txt,timestamp:new Date().toISOString()});
+    fundDraft="";saveAndSync();renderLogFunderingar();
+  };
+  c.querySelector("#skamtadd").onclick=function(){
+    var txt=c.querySelector("#fundin").value.trim();
+    if(!txt)return;
+    if(!savedJokes.includes(txt)){savedJokes.push(txt);saveAndSync();}
+    fundDraft="";c.querySelector("#fundin").value="";
+    var fz2=c.querySelector("#fz2");
+    if(fz2){fz2.innerHTML="<div class='ok-toast'>Skämt sparat!</div>";setTimeout(function(){fz2.innerHTML="";},2000);}
+  };
+  c.querySelectorAll("[data-delfund]").forEach(function(btn){
+    btn.onclick=function(){fundHist=fundHist.filter(function(f){return f.id!==Number(btn.dataset.delfund);});editingFundId=null;saveAndSync();renderLogFunderingar();};
+  });
+  c.querySelectorAll("[data-editfund]").forEach(function(btn){
+    btn.onclick=function(){editingFundId=Number(btn.dataset.editfund);renderLogFunderingar();};
+  });
+  fundHist.forEach(function(f){
+    var saveBtn=c.querySelector("#savefund-"+f.id);
+    var cancelBtn=c.querySelector("#cancelfund-"+f.id);
+    if(saveBtn){
+      saveBtn.onclick=function(){
+        var newText=c.querySelector("#editfund-"+f.id).value.trim();
+        if(newText)f.text=newText;
+        editingFundId=null;saveAndSync();renderLogFunderingar();
+      };
+    }
+    if(cancelBtn){cancelBtn.onclick=function(){editingFundId=null;renderLogFunderingar();};}
+  });
+}
+
+function jumpToLogInHistory(logId){
+  var log=logs.find(function(l){return l.id===logId;});
+  if(!log)return;
+  var d=new Date(log.timestamp);
+  openYear=String(d.getFullYear());
+  openMonth=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+  openDay=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  editingId=logId;
+  historySubview="aktiviteter";
+  setView("history");
+  renderHistory();
+}
+
+function jumpToImgInHistory(imgId){
+  historySubview="bilder";
+  setView("history");
+  renderHistory();
+  // Scroll to image after render
+  setTimeout(function(){
+    var el=document.querySelector("[data-histimg='"+imgId+"']");
+    if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+  },100);
+}
+
+function jumpToConvInHistory(convId){
+  var cv=sentConvs.find(function(c){return c.id===convId;});
+  if(!cv)return;
+  var d=new Date(cv.timestamp);
+  openYear=String(d.getFullYear());
+  openMonth=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+  openDay=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  historySubview="samtal";
+  setView("history");
+  renderHistory();
+}
+
+function jumpToFundInHistory(fundId){
+  var f=fundHist.find(function(f){return f.id===fundId;});
+  if(!f)return;
+  var d=new Date(f.timestamp);
+  openYear=String(d.getFullYear());
+  openMonth=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+  openDay=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  editingFundId=f.id;
+  historySubview="funderingar";
+  setView("history");
+  renderHistory();
+}
+
+// ---- HISTORIK ----
+var editingId=null;
+var openYear=null, openMonth=null, openDay=null;
+
+function openToday(){
+  var now=new Date();
+  openYear=String(now.getFullYear());
+  openMonth=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
+  openDay=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+}
+
+var historySubview="aktiviteter";
+
+function isoWeek(d){
+  var dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  var dayNum=(dt.getUTCDay()+6)%7;
+  dt.setUTCDate(dt.getUTCDate()-dayNum+3);
+  var firstThursday=new Date(Date.UTC(dt.getUTCFullYear(),0,4));
+  var weekNum=1+Math.round(((dt-firstThursday)/86400000-3+((firstThursday.getUTCDay()+6)%7))/7);
+  return weekNum;
+}
+
+function logEntry(log){
+  var c=CATS.find(function(x){return x.id===log.category;});
+  var img=imageHist.find(function(i){return i.logId===log.id;});
+  if(editingId===log.id){
+    var tid=log.time||"";
+    var tids=["10m","30m","1h","3h","8h","12h","1d","Oviktigt"];
+    var tidBtns=tids.map(function(t){return "<button class='chip"+(tid===t?" on":"")+"' data-edittid='"+t+"' style='padding:6px 10px;font-size:12px'>"+t+"</button>";}).join("");
+    var dateVal=log.timestamp?new Date(log.timestamp).toISOString().slice(0,10):"";
+    return "<div class='entry' style='flex-direction:column;gap:10px'>"
+      +"<div style='display:flex;align-items:center;gap:10px'>"
+      +"<span style='font-size:20px'>"+(c?c.e:"✨")+"</span>"
+      +"<div class='etitle' style='flex:1'>"+esc(log.activity)+"</div>"
+      +"</div>"
+      +"<div class='lbl' style='margin-bottom:4px'>Tid</div>"
+      +"<div style='display:flex;flex-wrap:wrap;gap:6px' id='edit-tid-wrap-"+log.id+"'>"
+      +tidBtns
+      +"<input type='hidden' id='edit-time-"+log.id+"' value='"+esc(tid)+"'/>"
+      +"</div>"
+      +"<div class='lbl' style='margin-bottom:4px'>Datum</div>"
+      +"<input type='date' class='inp w100' id='edit-date-"+log.id+"' value='"+esc(dateVal)+"'/>"
+      +"<input class='inp w100' id='edit-place-"+log.id+"' placeholder='Plats...' value='"+esc(log.place||"")+"'/>"
+      +"<input class='inp w100' id='edit-note-"+log.id+"' placeholder='Anteckning...' value='"+esc(log.note||"")+"'/>"
+      +"<div style='display:flex;gap:8px'>"
+      +"<button class='sec' id='save-edit-"+log.id+"' style='flex:1'>Spara</button>"
+      +"<button class='sec ghost' id='cancel-edit-"+log.id+"' style='flex:1'>Avbryt</button>"
+      +"</div></div>";
+  }
+  return "<div class='entry'>"
+    +"<span style='font-size:20px'>"+(c?c.e:"✨")+"</span>"
+    +"<div style='flex:1'>"
+    +"<div class='etitle'>"+esc(log.activity)+"</div>"
+    +(log.time?"<div class='enote' style='color:#00d4ff'>"+esc(log.time)+"</div>":"")
+    +(log.place?"<div class='enote' style='color:#6b7785'>📍 "+esc(log.place)+"</div>":"")
+    +(log.note?"<div class='enote'>"+esc(log.note)+"</div>":"")
+    +(img?"<div class='enote' style='color:#4a5563'>🖼️ Bild bifogad</div>":"")
+    +"<div class='etime'>"+fd(log.timestamp)+"</div>"
+    +"</div>"
+    +"<button class='delbtn' data-edit='"+log.id+"' style='color:#6b6880;font-size:14px;padding:2px 6px'>✏️</button>"
+    +"<button class='delbtn' data-id='"+log.id+"'>x</button>"
+    +"</div>";
+}
+
+function fundEntryHist(f){
+  if(editingFundId===f.id){
+    return "<div class='entry' style='flex-direction:column;gap:10px'>"
+      +"<textarea class='ta' id='hedit-fund-"+f.id+"' style='min-height:90px'>"+esc(f.text)+"</textarea>"
+      +"<div style='display:flex;gap:8px'>"
+      +"<button class='sec' id='hsave-fund-"+f.id+"' style='flex:1'>Spara</button>"
+      +"<button class='sec ghost' id='hcancel-fund-"+f.id+"' style='flex:1'>Avbryt</button>"
+      +"</div></div>";
+  }
+  return "<div class='entry'>"
+    +"<span style='font-size:20px'>💭</span>"
+    +"<div style='flex:1'>"
+    +"<div class='etitle' style='white-space:pre-wrap;font-weight:400;line-height:1.5'>"+esc(f.text)+"</div>"
+    +"<div class='etime'>"+fd(f.timestamp)+"</div>"
+    +"</div>"
+    +"<button class='delbtn' data-hedit-fund='"+f.id+"' style='color:#6b6880;font-size:14px;padding:2px 6px'>✏️</button>"
+    +"<button class='delbtn' data-hdel-fund='"+f.id+"'>x</button>"
+    +"</div>";
+}
+
+function convEntryHist(cv,person){
+  var msgs=sentMsgs.filter(function(m){return m.convId===cv.id;});
+  return "<div class='khist' data-hconv='"+cv.id+"'>"
+    +"<div class='kmsg' style='white-space:normal;font-weight:600'>"+esc(person?person.name:"Okand")+" - "+esc(cv.title)+"</div>"
+    +"<div class='kmeta'><span class='kbadge'>"+msgs.length+" meddelanden</span></div>"
+    +"</div>";
+}
+
+function folderRow(label,key,level,openKey,count){
+  var isOpen=openKey===key;
+  var indent=level===0?0:level===1?12:24;
+  var bg=level===0?"#10151f":level===1?"#151520":"transparent";
+  var border=level===0?"1px solid #1c2733":level===1?"1px solid #141d27":"none";
+  return "<div data-folder='"+esc(key)+"' data-level='"+level+"' style='"
+    +"display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:6px;"
+    +"border-radius:10px;background:"+bg+";border:"+border+";cursor:pointer;"
+    +"margin-left:"+indent+"px'>"
+    +"<span style='font-size:14px;transition:transform .15s;display:inline-block;"+(isOpen?"transform:rotate(90deg)":"")+"'>▶</span>"
+    +"<span style='flex:1;font-size:13px;color:#c4c0d4;font-weight:500'>"+label+"</span>"
+    +"<span class='sbadge'>"+count+"</span>"
+    +"</div>";
+}
+
+function renderHistory(){
+  var b=document.getElementById("body");
+  var subTabs="<div style='display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:6px;margin-bottom:20px'>"
+    +"<button class='mode-btn"+(historySubview==="aktiviteter"?" on":"")+"' data-histsub='aktiviteter' style='font-size:10px;padding:8px 2px'>Aktiviteter</button>"
+    +"<button class='mode-btn"+(historySubview==="samtal"?" on":"")+"' data-histsub='samtal' style='font-size:10px;padding:8px 2px'>Samtal</button>"
+    +"<button class='mode-btn"+(historySubview==="funderingar"?" on":"")+"' data-histsub='funderingar' style='font-size:10px;padding:8px 2px'>Funderingar</button>"
+    +"<button class='mode-btn"+(historySubview==="bilder"?" on":"")+"' data-histsub='bilder' style='font-size:10px;padding:8px 2px'>Bilder</button>"
+    +"<button class='mode-btn"+(historySubview==="media"?" on":"")+"' data-histsub='media' style='font-size:10px;padding:8px 2px'>Media</button>"
+    +"</div>";
+  b.innerHTML=subTabs+"<div id='hist-content'></div>";
+  b.querySelectorAll("[data-histsub]").forEach(function(btn){
+    btn.onclick=function(){historySubview=btn.dataset.histsub;openYear=null;openMonth=null;openDay=null;renderHistory();};
+  });
+  if(historySubview==="aktiviteter")renderHistAktiviteter();
+  else if(historySubview==="samtal")renderHistSamtal();
+  else if(historySubview==="bilder")renderHistBilder();
+  else if(historySubview==="media")renderHistMedia();
+  else renderHistFunderingar();
+}
+
+function showHistMediaModal(title,idx,cat){
+  var b=document.getElementById("body");
+  var existing=b.querySelector("#hist-media-modal");
+  if(existing)existing.remove();
+  var overlay=document.createElement("div");
+  overlay.id="hist-media-modal";
+  overlay.style.cssText="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px";
+  var selectedRating=0;
+  overlay.innerHTML="<div style='background:#10151f;border-radius:16px;border:1px solid #00d4ff;padding:20px;width:100%;max-width:400px'>"
+    +"<div class='lbl'>Klarmarkera</div>"
+    +"<div style='font-size:15px;color:#e4ecf7;margin:8px 0 16px;font-weight:500'>"+esc(title)+"</div>"
+    +"<div class='lbl'>Betyg</div>"
+    +"<div id='hm-stars' style='display:flex;gap:8px;margin-bottom:14px'>"
+    +[1,2,3,4,5].map(function(n){return "<button data-star='"+n+"' style='font-size:28px;background:none;border:none;cursor:pointer;opacity:0.3'>★</button>";}).join("")
+    +"</div>"
+    +"<div class='lbl'>Kommentar (valfritt)</div>"
+    +"<textarea class='ta' id='hm-comment' placeholder='Vad tyckte du?' style='min-height:70px;margin-bottom:12px'></textarea>"
+    +"<div style='display:flex;gap:8px'>"
+    +"<button class='sec' id='hm-save' style='flex:1'>Spara</button>"
+    +"<button class='sec ghost' id='hm-cancel' style='flex:1'>Avbryt</button>"
+    +"</div></div>";
+  document.body.appendChild(overlay);
+  overlay.querySelectorAll("[data-star]").forEach(function(star){
+    star.onclick=function(){
+      selectedRating=parseInt(star.dataset.star);
+      overlay.querySelectorAll("[data-star]").forEach(function(s){s.style.opacity=parseInt(s.dataset.star)<=selectedRating?"1":"0.3";});
+    };
+  });
+  overlay.querySelector("#hm-cancel").onclick=function(){overlay.remove();};
+  overlay.querySelector("#hm-save").onclick=function(){
+    var comment=overlay.querySelector("#hm-comment").value.trim();
+    mediaFardig.push({title:title,cat:cat,rating:selectedRating,comment:comment,timestamp:new Date().toISOString()});
+    if(mediaList[cat])mediaList[cat].splice(idx,1);
+    saveAndSync();
+    overlay.remove();
+    renderHistory();
+  };
+}
+
+function renderHistMedia(){
+  var c=document.getElementById("hist-content");
+  var MEDIA_CAT_LABELS={bok:"📚 Bok",musik:"🎵 Musik",film:"🎬 Film",serie:"📺 Serie",podcast:"🎙️ Podcast",videodelning:"📹 Videodelning",spel:"🎮 Spel",ovrigt:"✨ Övrigt"};
+  var allCats=["bok","musik","film","serie","podcast","videodelning","spel","ovrigt"];
+
+  // Group pending by category
+  var html="";
+
+  // Pending media
+  var hasPending=allCats.some(function(k){return (mediaList[k]||[]).length;});
+  if(hasPending){
+    html+="<div class='lbl' style='margin-bottom:12px'>Att konsumera</div>";
+    allCats.forEach(function(k){
+      var items=mediaList[k]||[];
+      if(!items.length)return;
+      html+="<div style='margin-bottom:16px'>"
+        +"<div style='font-size:12px;font-weight:600;color:#6b7785;margin-bottom:8px'>"+MEDIA_CAT_LABELS[k]+"</div>"
+        +"<div style='background:#0c1119;border:1px solid #141d27;border-radius:10px;padding:8px 12px'>"
+        +items.map(function(item,i){
+          return "<div style='padding:8px 0;border-bottom:1px solid #0e151e;display:flex;align-items:center;gap:8px'>"
+            +"<div style='flex:1;font-size:13px;color:#e4ecf7'>"+esc(item)+"</div>"
+            +"<button data-klarhistmed='"+i+"' data-klarhistcat='"+k+"' style='padding:4px 10px;border-radius:6px;background:#0a2933;border:1px solid #00d4ff;color:#00d4ff;font-size:11px;cursor:pointer;white-space:nowrap'>✓ Klar</button>"
+            +"</div>";
+        }).join("")
+        +"</div></div>";
+    });
+  }
+
+  // Finished media
+  if(mediaFardig&&mediaFardig.length){
+    html+="<div class='lbl' style='margin-top:20px;margin-bottom:12px'>Färdiga</div>";
+    // Group by category
+    var bycat={};
+    mediaFardig.forEach(function(e){if(!bycat[e.cat])bycat[e.cat]=[];bycat[e.cat].push(e);});
+    allCats.forEach(function(k){
+      var entries=bycat[k]||[];
+      if(!entries.length)return;
+      html+="<div style='margin-bottom:16px'>"
+        +"<div style='font-size:12px;font-weight:600;color:#6b7785;margin-bottom:8px'>"+MEDIA_CAT_LABELS[k]+"</div>"
+        +entries.map(function(e){
+          var stars=[1,2,3,4,5].map(function(n){return n<=e.rating?"★":"☆";}).join("");
+          return "<div style='padding:10px 14px;background:#0c1119;border:1px solid #141d27;border-radius:10px;margin-bottom:8px'>"
+            +"<div style='display:flex;align-items:center;gap:8px;margin-bottom:'>"
+            +"<div style='flex:1;font-size:13px;color:#e4ecf7;font-weight:500'>"+esc(e.title)+"</div>"
+            +"<span style='color:#f59e0b;font-size:14px;letter-spacing:1px'>"+stars+"</span>"
+            +"</div>"
+            +(e.comment?"<div style='font-size:12px;color:#6b7785;margin-top:4px;line-height:1.5'>"+esc(e.comment)+"</div>":"")
+            +"<div style='font-size:10px;color:#4a5563;margin-top:4px'>"+fd(e.timestamp)+"</div>"
+            +"</div>";
+        }).join("")
+        +"</div>";
+    });
+  }
+
+  if(!hasPending&&(!mediaFardig||!mediaFardig.length)){
+    html="<div class='empty'><div class='eico'>🎬</div>Ingen media sparad ännu.</div>";
+  }
+
+  c.innerHTML=html;
+  c.querySelectorAll("[data-klarhistmed]").forEach(function(btn){
+    btn.onclick=function(){
+      var idx=parseInt(btn.dataset.klarhistmed);
+      var cat=btn.dataset.klarhistcat;
+      var title=(mediaList[cat]||[])[idx];
+      if(title)showHistMediaModal(title,idx,cat);
+    };
+  });
+}
+
+function renderHistAktiviteter(){
+  var c=document.getElementById("hist-content");
+  if(!logs.length){c.innerHTML="<div class='empty'><div class='eico'>📋</div>Inga aktiviteter annu.</div>";return;}
+  renderGroupedByDate(c,logs,function(log){return new Date(log.timestamp);},function(log){return logEntry(log);});
+}
+
+function renderHistBilder(){
+  var c=document.getElementById("hist-content");
+  if(!imageHist.length){c.innerHTML="<div class='empty'><div class='eico'>🖼️</div>Inga bilder uppladdade annu.</div>";return;}
+  var html=imageHist.map(function(img){
+    var dataUrl="data:"+(img.mtype||"image/jpeg")+";base64,"+img.base64;
+    var d=new Date(img.timestamp);
+    var yy=String(d.getFullYear()).slice(-2);
+    var mm=String(d.getMonth()+1).padStart(2,"0");
+    var dd=String(d.getDate()).padStart(2,"0");
+    var logEntry2=logs.find(function(l){return l.id===img.logId;});
+    var catObj=logEntry2?CATS.find(function(c){return c.id===logEntry2.category;}):null;
+    var catName=catObj?catObj.label:(logEntry2?logEntry2.category:"");
+    var title=img.activity||"bild";
+    var fname=yy+"-"+mm+"-"+dd+(catName?", "+catName:"")+(title?", "+title:"");
+    var ext=img.mtype&&img.mtype.includes("png")?"png":"jpg";
+    return "<div data-histimg='"+img.id+"' style='background:#10151f;border-radius:12px;border:1px solid #141d27;overflow:hidden;margin-bottom:12px'>"
+      +"<img src='"+dataUrl+"' style='width:100%;max-height:240px;object-fit:cover;display:block'/>"
+      +"<div style='padding:10px 14px'>"
+      +"<div style='display:flex;align-items:center;gap:8px;margin-bottom:8px'>"
+      +"<input class='inp' id='img-title-"+img.id+"' value='"+esc(title)+"' style='flex:1;font-size:13px;padding:7px 10px'/>"
+      +"<button data-savetitle='"+img.id+"' style='padding:7px 12px;border-radius:8px;background:#0a2933;border:1px solid #00d4ff;color:#00d4ff;font-size:12px;cursor:pointer;white-space:nowrap'>✓</button>"
+      +"</div>"
+      +(catName?"<div style='font-size:11px;color:#6b7785;margin-bottom:6px'>"+esc(catName)+"</div>":"")
+      +"<div style='font-size:10px;color:#4a5563;margin-bottom:8px'>"+fd(img.timestamp)+"</div>"
+      +"<div style='display:flex;gap:8px'>"
+      +"<a id='dl-"+img.id+"' href='"+dataUrl+"' download='"+esc(fname)+"."+ext+"' style='flex:1;padding:7px 0;border-radius:8px;background:#0a2933;border:1px solid #00d4ff;color:#00d4ff;font-size:12px;text-decoration:none;text-align:center'>↓ Ladda ner</a>"
+      +"<button data-delimg='"+img.id+"' style='padding:7px 12px;background:none;border:1px solid #1c2733;border-radius:8px;color:#4a4860;cursor:pointer;font-size:12px'>Ta bort</button>"
+      +"</div>"
+      +"</div></div>";
+  }).join("");
+  c.innerHTML=html;
+  c.querySelectorAll("[data-savetitle]").forEach(function(btn){
+    btn.onclick=function(){
+      var id=Number(btn.dataset.savetitle);
+      var inp=c.querySelector("#img-title-"+id);
+      var img=imageHist.find(function(i){return i.id===id;});
+      if(img&&inp){
+        img.activity=inp.value.trim()||img.activity;
+        saveAndSync();
+        renderHistBilder();
+      }
+    };
+  });
+  c.querySelectorAll("[data-delimg]").forEach(function(btn){
+    btn.onclick=function(){imageHist=imageHist.filter(function(i){return i.id!==Number(btn.dataset.delimg);});saveAndSync();renderHistBilder();};
+  });
+}
+
+function renderHistFunderingar(){
+  var c=document.getElementById("hist-content");
+  if(!fundHist.length){c.innerHTML="<div class='empty'><div class='eico'>💭</div>Inga funderingar annu.</div>";return;}
+  renderGroupedByDate(c,fundHist,function(f){return new Date(f.timestamp);},function(f){return fundEntryHist(f);});
+}
+
+function renderHistSamtal(){
+  var c=document.getElementById("hist-content");
+  if(!sentConvs.length){c.innerHTML="<div class='empty'><div class='eico'>💬</div>Inga samtal annu.</div>";return;}
+  renderGroupedByDate(c,sentConvs,function(cv){return new Date(cv.timestamp);},function(cv){
+    var person=sentPeople.find(function(p){return p.id===cv.personId;});
+    return convEntryHist(cv,person);
+  });
+}
+
+function renderGroupedByDate(container,items,getDate,renderItem){
+  var byYear={};
+  var MONTHS=["Januari","Februari","Mars","April","Maj","Juni","Juli","Augusti","September","Oktober","November","December"];
+  var DAYS=["Sondag","Mandag","Tisdag","Onsdag","Torsdag","Fredag","Lordag"];
+
+  items.forEach(function(item){
+    var d=getDate(item);
+    var y=d.getFullYear();
+    var mo=d.getMonth();
+    var day=d.getDate();
+    var dayKey=y+"-"+String(mo+1).padStart(2,"0")+"-"+String(day).padStart(2,"0");
+    var moKey=y+"-"+String(mo+1).padStart(2,"0");
+    if(!byYear[y])byYear[y]={};
+    if(!byYear[y][moKey])byYear[y][moKey]={month:mo,days:{}};
+    if(!byYear[y][moKey].days[dayKey])byYear[y][moKey].days[dayKey]={day:day,weekday:DAYS[d.getDay()],week:isoWeek(d),items:[]};
+    byYear[y][moKey].days[dayKey].items.push(item);
+  });
+
+  var html="";
+  var years=Object.keys(byYear).sort(function(a,b){return b-a;});
+
+  years.forEach(function(y){
+    var yearCount=0;
+    Object.keys(byYear[y]).forEach(function(mk){Object.keys(byYear[y][mk].days).forEach(function(dk){yearCount+=byYear[y][mk].days[dk].items.length;});});
+    html+=folderRow(y,"y-"+y,0,"y-"+openYear,yearCount);
+
+    if(openYear==y){
+      var months=Object.keys(byYear[y]).sort(function(a,b){return b.localeCompare(a);});
+      months.forEach(function(mk){
+        var moData=byYear[y][mk];
+        var moCount=0;Object.keys(moData.days).forEach(function(dk){moCount+=moData.days[dk].items.length;});
+        var moLabel=MONTHS[moData.month];
+        html+=folderRow(moLabel,"m-"+mk,1,"m-"+openMonth,moCount);
+
+        if(openMonth==mk){
+          var days=Object.keys(moData.days).sort(function(a,b){return b.localeCompare(a);});
+          days.forEach(function(dk){
+            var dayData=moData.days[dk];
+            var dayLabel=dayData.weekday+" "+dayData.day+" <span style='color:#4a4860;font-weight:400'>(v."+dayData.week+")</span>";
+            html+=folderRow(dayLabel,"d-"+dk,2,"d-"+openDay,dayData.items.length);
+
+            if(openDay==dk){
+              dayData.items.forEach(function(item){html+=renderItem(item);});
+            }
+          });
+        }
+      });
+    }
+  });
+
+  container.innerHTML=html;
+
+  container.querySelectorAll("[data-folder]").forEach(function(el){
+    el.onclick=function(){
+      var key=el.dataset.folder;
+      var level=Number(el.dataset.level);
+      if(level===0){var y=key.replace("y-","");openYear=(openYear==y?null:y);openMonth=null;openDay=null;}
+      else if(level===1){var mk=key.replace("m-","");openMonth=(openMonth==mk?null:mk);openDay=null;}
+      else if(level===2){var dk=key.replace("d-","");openDay=(openDay==dk?null:dk);}
+      editingId=null;editingFundId=null;render();
+    };
+  });
+
+  // Activity entry actions
+  container.querySelectorAll(".delbtn[data-id]").forEach(function(btn){
+    btn.onclick=function(e){e.stopPropagation();logs=logs.filter(function(l){return l.id!==Number(btn.dataset.id);});editingId=null;saveAndSync();hdr();render();};
+  });
+  container.querySelectorAll("[data-edit]").forEach(function(btn){
+    btn.onclick=function(e){e.stopPropagation();editingId=Number(btn.dataset.edit);render();};
+  });
+  logs.forEach(function(log){
+    // Bind tid buttons in edit mode
+    var tidWrap=container.querySelector("#edit-tid-wrap-"+log.id);
+    if(tidWrap){
+      tidWrap.querySelectorAll("[data-edittid]").forEach(function(btn){
+        btn.onclick=function(e){
+          e.stopPropagation();
+          var hi=container.querySelector("#edit-time-"+log.id);
+          var cur=hi?hi.value:"";
+          var newVal=cur===btn.dataset.edittid?"":btn.dataset.edittid;
+          if(hi)hi.value=newVal;
+          tidWrap.querySelectorAll("[data-edittid]").forEach(function(b){b.classList.toggle("on",b.dataset.edittid===newVal);});
+        };
+      });
+    }
+    var saveBtn=container.querySelector("#save-edit-"+log.id);
+    var cancelBtn=container.querySelector("#cancel-edit-"+log.id);
+    if(saveBtn){
+      saveBtn.onclick=function(){
+        var timeVal=container.querySelector("#edit-time-"+log.id)?container.querySelector("#edit-time-"+log.id).value.trim():"";
+        var placeEl=container.querySelector("#edit-place-"+log.id);
+        var placeVal=placeEl?placeEl.value.trim():"";
+        var noteVal=container.querySelector("#edit-note-"+log.id)?container.querySelector("#edit-note-"+log.id).value.trim():"";
+        var dateEl=container.querySelector("#edit-date-"+log.id);
+        if(dateEl&&dateEl.value){
+          var oldDate=new Date(log.timestamp);
+          var newDate=new Date(dateEl.value+"T"+oldDate.toTimeString().slice(0,8));
+          if(!isNaN(newDate))log.timestamp=newDate.toISOString();
+        }
+        log.time=timeVal;log.place=placeVal;log.note=noteVal;
+        editingId=null;saveAndSync();render();
+      };
+    }
+    if(cancelBtn){cancelBtn.onclick=function(){editingId=null;render();};}
+  });
+
+  // Funderingar entry actions
+  container.querySelectorAll("[data-hdel-fund]").forEach(function(btn){
+    btn.onclick=function(e){e.stopPropagation();fundHist=fundHist.filter(function(f){return f.id!==Number(btn.dataset.hdelFund);});editingFundId=null;saveAndSync();render();};
+  });
+  container.querySelectorAll("[data-hedit-fund]").forEach(function(btn){
+    btn.onclick=function(e){e.stopPropagation();editingFundId=Number(btn.dataset.heditFund);render();};
+  });
+  fundHist.forEach(function(f){
+    var saveBtn=container.querySelector("#hsave-fund-"+f.id);
+    var cancelBtn=container.querySelector("#hcancel-fund-"+f.id);
+    if(saveBtn){
+      saveBtn.onclick=function(){
+        var newText=container.querySelector("#hedit-fund-"+f.id).value.trim();
+        if(newText)f.text=newText;
+        editingFundId=null;saveAndSync();render();
+      };
+    }
+    if(cancelBtn){cancelBtn.onclick=function(){editingFundId=null;render();};}
+  });
+
+  // Samtal entry: click to open conversation
+  container.querySelectorAll("[data-hconv]").forEach(function(el){
+    el.onclick=function(e){
+      e.stopPropagation();
+      var cv=sentConvs.find(function(c){return c.id===el.dataset.hconv;});
+      if(cv){
+        activePersonId=cv.personId;activeConvId=cv.id;sentView="chat";
+        setView("log");logSubview="skickade";render();
+      }
+    };
+  });
+}
+
+// ---- KOMMUNIKATION ----
+function renderKomm(){
+  var b=document.getElementById("body");
+  var modes=[
+    {id:"klarhet",label:"Klarhet",desc:"Gör tydligare"},
+    {id:"svar",label:"Svar",desc:"Svarsförslag"},
+    {id:"omforma",label:"Omforma",desc:"Formulera idé"},
+    {id:"synonymer",label:"Synonymer",desc:"Hitta synonymer"}
+  ];
+  var selector="<div class='lbl'>Skrivhjälp</div><div style='display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px'>"
+    +modes.map(function(m){return "<button class='mode-btn"+(kommMode===m.id?" on":"")+"' data-mode='"+m.id+"'>"+m.label+"<div class='mode-desc'>"+m.desc+"</div></button>";}).join("")
+    +"</div><div id='komm-content'></div>";
+  b.innerHTML=selector;
+  b.querySelectorAll(".mode-btn").forEach(function(btn){
+    btn.onclick=function(){
+      if(btn.dataset.mode!==kommMode){kResult=null;sResult=null;oResult=null;}
+      kommMode=btn.dataset.mode;renderKommContent();
+    };
+  });
+  renderKommContent();
+}
+function renderKommContent(){
+  var c=document.getElementById("komm-content");
+  if(!c)return;
+  var inner="";
+  if(kommMode==="klarhet")inner=buildKlarhet();
+  else if(kommMode==="svar")inner=buildSvar();
+  else if(kommMode==="omforma")inner=buildOmforma();
+  else if(kommMode==="synonymer")inner=buildSynonymer();
+  c.innerHTML=inner;
+  var b=document.getElementById("body");
+  if(kommMode==="klarhet")bindKlarhet(b);
+  else if(kommMode==="svar")bindSvar(b);
+  else if(kommMode==="omforma")bindOmforma(b);
+  else if(kommMode==="synonymer")bindSynonymer(b);
+}
+
+// -- Klarhet --
+function buildKlarhet(){
+  if(kLoading)return spin();
+  if(kResult){
+    var cards=kResult.suggestions.map(function(s,i){return "<div class='scard'><div class='stone'>Forslag "+(i+1)+" - "+esc(s.tone)+"</div><div class='stext'>"+esc(s.text)+"</div>"+(s.why?"<div class='swhy'>"+esc(s.why)+"</div>":"")+"</div>";}).join("");
+    return "<div class='lbl'>Ditt meddelande</div><div class='orig'>"+esc(kResult.original)+"</div><div class='lbl'>Tydligare formuleringar</div>"+cards+"<button class='sec ghost mt12' id='kny'>Analysera nytt</button>";
+  }
+  var hist=kHist.slice(0,5).map(function(h,i){return histRow(h,i,"kidx","<span class='kbadge'>"+esc(h.context)+"</span>");}).join("");
+  return "<div class='lbl'>Till vem?</div><div class='ctx-chips'>"+ctxChips(CTXS,kCtx,"kctx")+"</div><div class='lbl'>Ditt meddelande</div><textarea class='ta' id='kta' placeholder='Klistra in meddelandet du vill gora tydligare...'>"+esc(kDraft)+"</textarea><button class='sec' id='kana'>Analysera</button>"+(hist?"<div class='mt20'><div class='lbl'>Tidigare</div>"+hist+"</div>":"");
+}
+function bindKlarhet(b){
+  if(kLoading)return;
+  if(kResult){var kny=b.querySelector("#kny");if(kny)kny.onclick=function(){kResult=null;kDraft="";renderKomm();};return;}
+  bindChips(b,"kctx",function(){return kCtx;},function(v){kCtx=v;});
+  var ta=b.querySelector("#kta");if(ta)ta.oninput=function(){kDraft=ta.value;};
+  var kana=b.querySelector("#kana");if(kana)kana.onclick=function(){var txt=b.querySelector("#kta").value.trim();if(!txt)return;kDraft=txt;doAnalyseKlarhet(txt);};
+  bindHist(b,"kidx",function(i){kResult=kHist[i];renderKomm();},function(i){kHist.splice(i,1);saveAndSync();renderKomm();});
+}
+async function doAnalyseKlarhet(text){
+  kLoading=true;renderKommContent();
+  var sys="Du ar en kommunikationscoach. Hjalp personen formulera sig tydligare till "+kCtx.toLowerCase()+". Svara BARA med giltig JSON: {\"suggestions\":[{\"tone\":\"Rakt pa sak\",\"text\":\"...\",\"why\":\"...\"},{\"tone\":\"Mjukare\",\"text\":\"...\",\"why\":\"...\"},{\"tone\":\"Kortfattat\",\"text\":\"...\",\"why\":\"...\"}]}";
+  try{var res=await aiCall(sys,"Originalmeddelande: "+text,1000);var data=await res.json();var parsed=JSON.parse(aiText(data).replace(/```json|```/g,"").trim());kResult={id:Date.now(),original:text,context:kCtx,suggestions:parsed.suggestions||[],timestamp:new Date().toISOString()};kHist=[kResult].concat(kHist).slice(0,20);saveAndSync();}
+  catch(e){kResult={id:Date.now(),original:text,context:kCtx,timestamp:new Date().toISOString(),suggestions:[{tone:"Fel",text:"Kunde inte analysera. Forsok igen.",why:""}]};}
+  kLoading=false;renderKommContent();
+}
+
+// -- Svar --
+function buildSvar(){
+  if(sLoading)return spin();
+  if(sResult){
+    var cards=sResult.replies.map(function(r,i){return "<div class='reply-card' data-ri='"+i+"'><div class='reply-tone'>"+esc(r.tone)+"</div><div class='reply-text'>"+esc(r.text)+"</div><div class='reply-why'>"+esc(r.why)+"</div><div class='copy-ok' id='scok"+i+"'>Kopierat!</div></div>";}).join("");
+    return "<div class='bubble-lbl'>"+esc(sResult.context)+"</div><div class='bubble-them'>"+esc(sResult.original)+"</div><div class='lbl mt12'>Svarsforslag - tryck for att kopiera</div>"+cards+"<button class='sec ghost mt12' id='sny'>Nytt meddelande</button>";
+  }
+  var hist=sHist.slice(0,5).map(function(h,i){return histRow(h,i,"sidx","<span class='kbadge'>"+esc(h.context)+"</span>");}).join("");
+  return "<div class='lbl'>Fran vem?</div><div class='ctx-chips'>"+ctxChips(CTXS,sCtx,"sctx")+"</div><div class='lbl'>Deras meddelande</div><textarea class='ta' id='smsg' placeholder='Klistra in meddelandet du fatt...' style='min-height:90px'>"+esc(sDraft)+"</textarea><div class='lbl mt8'>Vad vill du formedla? (valfritt)</div><textarea class='ta' id='sictx' placeholder='T.ex. vill tacka nej men vara varm...' style='min-height:60px'>"+esc(sMyCtx)+"</textarea><button class='sec' id='sfetch'>Ge mig svarsforslag</button>"+(hist?"<div class='mt20'><div class='lbl'>Tidigare</div>"+hist+"</div>":"");
+}
+function bindSvar(b){
+  if(sLoading)return;
+  if(sResult){
+    b.querySelectorAll(".reply-card").forEach(function(card){card.onclick=function(){copyText(sResult.replies[Number(card.dataset.ri)].text);showCopyOk("scok"+card.dataset.ri);};});
+    var sny=b.querySelector("#sny");if(sny)sny.onclick=function(){sResult=null;sDraft="";sMyCtx="";renderKomm();};return;
+  }
+  bindChips(b,"sctx",function(){return sCtx;},function(v){sCtx=v;});
+  var ta=b.querySelector("#smsg"),tc=b.querySelector("#sictx");
+  if(ta)ta.oninput=function(){sDraft=ta.value;};if(tc)tc.oninput=function(){sMyCtx=tc.value;};
+  var sfetch=b.querySelector("#sfetch");if(sfetch)sfetch.onclick=function(){var msg=b.querySelector("#smsg").value.trim();if(!msg)return;sDraft=msg;sMyCtx=b.querySelector("#sictx").value.trim();doFetchSvar(sDraft,sMyCtx);};
+  bindHist(b,"sidx",function(i){sResult=sHist[i];renderKomm();},function(i){sHist.splice(i,1);saveAndSync();renderKomm();});
+}
+async function doFetchSvar(msg,myIntent){
+  sLoading=true;renderKommContent();
+  var intentPart=myIntent?" Vad jag vill formedla: "+myIntent:"";
+  var sys="Du ar en kommunikationscoach. Hjalp personen svara pa meddelanden fran "+sCtx.toLowerCase()+". Svara BARA med giltig JSON: {\"replies\":[{\"tone\":\"Varm och personlig\",\"text\":\"...\",\"why\":\"...\"},{\"tone\":\"Tydlig och direkt\",\"text\":\"...\",\"why\":\"...\"},{\"tone\":\"Kortfattad\",\"text\":\"...\",\"why\":\"...\"},{\"tone\":\"Lekfull\",\"text\":\"...\",\"why\":\"...\"}]}";
+  try{var res=await aiCall(sys,"Deras meddelande: "+msg+intentPart,1200);var data=await res.json();var parsed=JSON.parse(aiText(data).replace(/```json|```/g,"").trim());sResult={id:Date.now(),original:msg,context:sCtx,intent:myIntent,replies:parsed.replies||[],timestamp:new Date().toISOString()};sHist=[sResult].concat(sHist).slice(0,20);saveAndSync();}
+  catch(e){sResult={id:Date.now(),original:msg,context:sCtx,intent:myIntent,timestamp:new Date().toISOString(),replies:[{tone:"Fel",text:"Kunde inte generera. Forsok igen.",why:""}]};}
+  sLoading=false;renderKommContent();
+}
+
+// -- Omforma --
+function buildOmforma(){
+  if(oLoading)return spin();
+  if(oResult){
+    var cards=oResult.suggestions.map(function(s,i){return "<div class='scard' data-oi='"+i+"'><div class='stone'>Forslag "+(i+1)+" - "+esc(s.tone)+"</div><div class='stext'>"+esc(s.text)+"</div><div class='swhy'>"+esc(s.why)+"</div><div class='copy-ok' id='ocok"+i+"'>Kopierat!</div></div>";}).join("");
+    return "<div class='lbl'>Din ide</div><div class='orig'>"+esc(oResult.idea)+"</div><div class='lbl'>Forslag - tryck for att kopiera</div>"+cards+"<button class='sec ghost mt12' id='ony'>Formulera nagot nytt</button>";
+  }
+  var hist=oHist.slice(0,5).map(function(h,i){return histRow(h,i,"oidx","<span class='kbadge'>"+esc(h.to)+"</span><span class='kbadge'>"+esc(h.tone)+"</span>");}).join("");
+  return "<div class='lbl'>Till vem?</div><div class='ctx-chips'>"+ctxChips(CTXS,oCtx,"octx")+"</div><div class='lbl'>Ton</div><div class='ctx-chips'>"+ctxChips(OTONES,oTone,"otone")+"</div><div class='lbl'>Beskriv vad du vill saga</div><textarea class='ta' id='ota' placeholder='T.ex. vill be om ursakt for att jag missade motet...'>"+esc(oDraft)+"</textarea><button class='sec' id='ofetch'>Ge mig formuleringar</button>"+(hist?"<div class='mt20'><div class='lbl'>Tidigare</div>"+hist+"</div>":"");
+}
+function bindOmforma(b){
+  if(oLoading)return;
+  if(oResult){
+    b.querySelectorAll("[data-oi]").forEach(function(card){card.onclick=function(){copyText(oResult.suggestions[Number(card.dataset.oi)].text);showCopyOk("ocok"+card.dataset.oi);};});
+    var ony=b.querySelector("#ony");if(ony)ony.onclick=function(){oResult=null;oDraft="";renderKomm();};return;
+  }
+  bindChips(b,"octx",function(){return oCtx;},function(v){oCtx=v;});
+  bindChips(b,"otone",function(){return oTone;},function(v){oTone=v;});
+  var ta=b.querySelector("#ota");if(ta)ta.oninput=function(){oDraft=ta.value;};
+  var ofetch=b.querySelector("#ofetch");if(ofetch)ofetch.onclick=function(){var txt=b.querySelector("#ota").value.trim();if(!txt)return;oDraft=txt;doFetchOmforma(txt);};
+  bindHist(b,"oidx",function(i){oResult=oHist[i];renderKomm();},function(i){oHist.splice(i,1);saveAndSync();renderKomm();});
+}
+async function doFetchOmforma(idea){
+  oLoading=true;renderKommContent();
+  var sys="Du ar en kommunikationscoach. Hjalp personen formulera ett meddelande till "+oCtx.toLowerCase()+" med en "+oTone.toLowerCase()+" ton. Svara BARA med giltig JSON: {\"suggestions\":[{\"tone\":\"Alternativ 1\",\"text\":\"...\",\"why\":\"...\"},{\"tone\":\"Alternativ 2\",\"text\":\"...\",\"why\":\"...\"},{\"tone\":\"Kortfattad\",\"text\":\"...\",\"why\":\"...\"}]}";
+  try{var res=await aiCall(sys,"Ide: "+idea,1200);var data=await res.json();var parsed=JSON.parse(aiText(data).replace(/```json|```/g,"").trim());oResult={id:Date.now(),idea:idea,to:oCtx,tone:oTone,suggestions:parsed.suggestions||[],timestamp:new Date().toISOString()};oHist=[oResult].concat(oHist).slice(0,20);saveAndSync();}
+  catch(e){oResult={id:Date.now(),idea:idea,to:oCtx,tone:oTone,timestamp:new Date().toISOString(),suggestions:[{tone:"Fel",text:"Kunde inte generera. Forsok igen.",why:""}]};}
+  oLoading=false;renderKommContent();
+}
+
+
+// -- Synonymer --
+function buildSynonymer(){
+  if(synLoading)return spin();
+  if(synResult){
+    var groups=synResult.groups.map(function(g){
+      var words=g.words.map(function(w){
+        return "<span style='display:inline-block;padding:6px 12px;margin:4px;border-radius:20px;background:#10151f;border:1px solid #1c2733;color:#e4ecf7;font-size:13px;cursor:pointer' data-word='"+esc(w)+"'>"+esc(w)+"</span>";
+      }).join("");
+      return "<div class='scard' style='cursor:default'>"
+        +"<div class='stone'>"+esc(g.label)+"</div>"
+        +"<div style='margin-top:4px'>"+words+"</div>"
+        +"</div>";
+    }).join("");
+    return "<div class='lbl'>Synonymer för</div><div class='orig'>"+esc(synResult.word)+"</div>"
+      +"<div class='lbl'>Klicka för att kopiera</div>"
+      +groups
+      +"<div class='copy-ok' id='syncok' style='text-align:center;margin-top:4px'>Kopierat!</div>"
+      +"<button class='sec ghost mt12' id='synny'>Sök nytt ord</button>";
+  }
+  var hist=synHist.slice(0,5).map(function(h,i){
+    return "<div class='khist' style='display:flex;align-items:flex-start;gap:8px' data-synidx='"+i+"'>"
+      +"<div style='flex:1;min-width:0'><div class='kmsg'>"+esc(h.word)+"</div>"
+      +"<div class='kmeta'><span>"+fd(h.timestamp)+"</span></div></div>"
+      +"<button class='delbtn' data-delsynidx='"+i+"' style='flex-shrink:0;font-size:18px;padding:0 2px'>x</button>"
+      +"</div>";
+  }).join("");
+  return "<div class='lbl'>Ord eller fras</div>"
+    +"<div class='row'><input class='inp' id='synin' placeholder='T.ex. glad, snabb, säga...' value='"+esc(synDraft)+"'/>"
+    +"<button class='abtn' id='synfetch'>&#8594;</button></div>"
+    +(hist?"<div class='mt20'><div class='lbl'>Tidigare</div>"+hist+"</div>":"");
+}
+function bindSynonymer(b){
+  if(synLoading)return;
+  if(synResult){
+    b.querySelectorAll("[data-word]").forEach(function(el){
+      el.onclick=function(){copyText(el.dataset.word);showCopyOk("syncok");};
+    });
+    var synny=b.querySelector("#synny");if(synny)synny.onclick=function(){synResult=null;synDraft="";renderKommContent();};
+    return;
+  }
+  var si=b.querySelector("#synin");
+  if(si){
+    si.oninput=function(){synDraft=si.value;};
+    si.onkeydown=function(e){if(e.key==="Enter"&&si.value.trim())doFetchSynonymer(si.value.trim());};
+  }
+  var sf=b.querySelector("#synfetch");
+  if(sf)sf.onclick=function(){var v=b.querySelector("#synin").value.trim();if(v)doFetchSynonymer(v);};
+  b.querySelectorAll("[data-synidx]").forEach(function(el){
+    el.onclick=function(e){if(!e.target.dataset.delsynidx){synResult=synHist[Number(el.dataset.synidx)];renderKommContent();}};
+  });
+  b.querySelectorAll("[data-delsynidx]").forEach(function(btn){
+    btn.onclick=function(e){e.stopPropagation();synHist.splice(Number(btn.dataset.delsynidx),1);saveAndSync();renderKommContent();};
+  });
+}
+async function doFetchSynonymer(word){
+  synLoading=true;synDraft=word;renderKommContent();
+  var sys='Du ar en sprakexpert. Ge synonymer och liknande uttryck pa svenska. Svara BARA med giltig JSON utan backticks: {"groups":[{"label":"Vanliga synonymer","words":["...","...","..."]},{"label":"Mer formella","words":["...","...","..."]},{"label":"Mer informella","words":["...","...","..."]}]} Ge 4-6 ord per grupp.';
+  try{
+    var res=await aiCall(sys,"Hitta synonymer för: "+word,800);
+    var data=await res.json();
+    var parsed=JSON.parse(aiText(data).replace(/```json|```/g,"").trim());
+    synResult={id:Date.now(),word:word,groups:parsed.groups||[],timestamp:new Date().toISOString()};
+    synHist=[synResult].concat(synHist).slice(0,20);saveAndSync();
+  }catch(e){
+    synResult={id:Date.now(),word:word,timestamp:new Date().toISOString(),groups:[{label:"Fel",words:["Kunde inte hämta synonymer. Försök igen."]}]};
+  }
+  synLoading=false;renderKommContent();
+}
+
+// ---- FORKLARA ----
+var fDetailLoading=false;
+
+function renderForklara(){
+  var b=document.getElementById("body");
+  if(fLoading||fDetailLoading){b.innerHTML=spin();return;}
+  if(fResult){
+    var answer=fResult.explanations&&fResult.explanations[0]?fResult.explanations[0].text:fResult.text||"";
+    var isDetailed=fResult.detailed||false;
+    b.innerHTML="<div class='lbl'>Din fraga</div>"
+      +"<textarea class='ta' id='fta' style='margin-bottom:8px'>"+esc(fResult.question)+"</textarea>"
+      +"<div class='tbox' id='fanswerbox' style='cursor:pointer' title='Klicka for att kopiera'>"+esc(answer)+"</div>"
+      +"<div class='copy-ok' id='fcopyok' style='text-align:center;margin-bottom:8px'>Kopierat!</div>"
+      +"<div style='display:flex;gap:8px;margin-bottom:8px'>"
+      +"<button class='sec' id='fagain' style='flex:1'>Sök igen</button>"
+      +(isDetailed?"":"<button class='sec ghost' id='fdetail' style='flex:1'>Mer detaljerat</button>")
+      +"</div>"
+      +"<button class='sec ghost' id='fny' style='width:100%'>Ny fråga</button>";
+
+    b.querySelector("#fanswerbox").onclick=function(){copyText(answer);showCopyOk("fcopyok");};
+    b.querySelector("#fagain").onclick=function(){
+      var txt=b.querySelector("#fta").value.trim();
+      if(!txt)return;
+      fResult=null;doFetchForklara(txt,false);
+    };
+    if(!isDetailed){
+      b.querySelector("#fdetail").onclick=function(){doFetchForklara(fResult.question,true);};
+    }
+    b.querySelector("#fny").onclick=function(){fResult=null;fDraft="";renderForklara();};
+    return;
+  }
+  var hist=fHist.slice(0,5).map(function(h,i){return histRow(h,i,"fidx","");}).join("");
+  b.innerHTML="<div class='lbl'>Vad vill du forsta?</div>"
+    +"<textarea class='ta' id='fta' placeholder='T.ex. Vad ar inflation? Hur fungerar en motor?'>"+esc(fDraft)+"</textarea>"
+    +"<button class='sec' id='ffetch'>Sök</button>"
+    +"<div style='margin-top:10px'>"
+    +"<label style='display:block;padding:10px;background:#0c1119;border:1px dashed #1c2733;border-radius:10px;text-align:center;cursor:pointer;font-size:13px;color:#6b6880'>"
+    +"📷 Ladda upp bild — få en enkel förklaring"
+    +"<input type='file' id='fimgupload' accept='image/*' style='display:none'/></label>"
+    +"</div>"
+    +(hist?"<div class='mt20'><div class='lbl'>Tidigare fragor</div>"+hist+"</div>":"");
+  var ta=b.querySelector("#fta");if(ta)ta.oninput=function(){fDraft=ta.value;};
+  b.querySelector("#ffetch").onclick=function(){var txt=b.querySelector("#fta").value.trim();if(!txt)return;fDraft=txt;doFetchForklara(txt,false);};
+  var fimg=b.querySelector("#fimgupload");
+  if(fimg)fimg.onchange=function(){if(fimg.files&&fimg.files[0])doFetchForklaraBild(fimg.files[0]);};
+  bindHist(b,"fidx",function(i){fResult=fHist[i];renderForklara();},function(i){fHist.splice(i,1);saveAndSync();renderForklara();});
+}
+
+async function doFetchForklara(question,detailed){
+  if(detailed)fDetailLoading=true;else fLoading=true;
+  renderForklara();
+  var sys=detailed
+    ?"Du ar en pedagog. Ge en detaljerad och djupgående förklaring av ämnet pa svenska. Svara med ren text, inga JSON-taggar."
+    :"Du ar en pedagog. Ge en kort, enkel och lättförståelig förklaring av ämnet pa svenska. Max 3-4 meningar. Svara med ren text, inga JSON-taggar.";
+  try{
+    var res=await aiCall(sys,"Förklara: "+question,detailed?1500:600);
+    var data=await res.json();
+    var text=aiText(data)||"Kunde inte hämta förklaring.";
+    fResult={id:Date.now(),question:question,text:text,detailed:detailed,explanations:[{level:detailed?"Detaljerad":"Enkel",text:text}],timestamp:new Date().toISOString()};
+    if(!detailed){fHist=[fResult].concat(fHist).slice(0,20);saveAndSync();}
+  }catch(e){
+    fResult={id:Date.now(),question:question,text:"Kunde inte hämta förklaring. Försök igen.",detailed:detailed,explanations:[{level:"Fel",text:"Kunde inte hämta förklaring."}],timestamp:new Date().toISOString()};
+  }
+  if(detailed)fDetailLoading=false;else fLoading=false;
+  renderForklara();
+}
+
+async function doFetchForklaraBild(file){
+  fLoading=true;renderForklara();
+  try{
+    var dataUrl=await new Promise(function(res,rej){
+      var r=new FileReader();
+      r.onload=function(){res(r.result);};
+      r.onerror=function(){rej(new Error("Filfel"));};
+      r.readAsDataURL(file);
+    });
+    var res=await fetch(PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+      model:"anthropic/claude-sonnet-4.6",max_tokens:400,
+      messages:[
+        {role:"user",content:[
+          {type:"image_url",image_url:{url:dataUrl}},
+          {type:"text",text:"Du ar en pedagog. Ge en kort, enkel och lättförståelig förklaring pa svenska av vad du ser pa bilden. Max 3-4 meningar."}
+        ]}
+      ]
+    })});
+    var data=await res.json();
+    var text=aiText(data)||"Kunde inte analysera bilden.";
+    if(data.error){text="Fel: "+JSON.stringify(data.error);}
+    fResult={id:Date.now(),question:"[Bild: "+file.name+"]",text:text,detailed:false,explanations:[{level:"Enkel",text:text}],timestamp:new Date().toISOString()};
+    fHist=[fResult].concat(fHist).slice(0,20);saveAndSync();
+  }catch(e){
+    fResult={id:Date.now(),question:"[Bild]",text:"Kunde inte analysera bilden: "+e.message,detailed:false,explanations:[{level:"Fel",text:"Kunde inte analysera bilden."}],timestamp:new Date().toISOString()};
+  }
+  fLoading=false;renderForklara();
+}
+
+// ---- TERAPI ----
+function renderTerapi(){
+  var b=document.getElementById("body");
+  var chatHtml="";
+  if(tMessages.length){
+    chatHtml="<div class='chat-area'>"
+      +tMessages.map(function(m){
+        if(m.role==="user"){
+          return "<div style='display:flex;justify-content:flex-end'><div class='bubble-me'>"+esc(m.content)+"</div></div>";
+        }
+        return "<div style='display:flex;justify-content:flex-start'><div class='bubble-them'>"+esc(m.content)+"</div></div>";
+      }).join("")
+      +(tLoading?"<div style='display:flex;justify-content:flex-start'><div class='bubble-them' style='color:#6b6880;font-style:italic'>Skriver...</div></div>":"")
+      +"</div>";
+  } else {
+    chatHtml="<div style='text-align:center;padding:32px 0 20px;color:#6b6880;font-size:14px;line-height:1.7'>"
+      +"<div style='font-size:36px;margin-bottom:12px'>🧠</div>"
+      +"Jag ar har for att lyssna och hjalpa dig reflektera.<br>Dela dina tankar, bekymmer eller ideer.</div>";
+  }
+  var savedHist="";
+  if(tHist.length){
+    savedHist="<div class='mt20'><div class='lbl'>Sparade samtal</div>"
+      +tHist.slice(0,5).map(function(h,i){return histRow(h,i,"tidx","<span class='kbadge'>"+h.messages.length+" meddelanden</span>");}).join("")
+      +"</div>";
+  }
+  var btns=tMessages.length
+    ?"<div style='display:flex;gap:8px;margin-bottom:12px'><button class='sec ghost' id='tsave' style='flex:1'>Spara samtal</button><button class='sec ghost' id='tclear' style='flex:1'>Nytt samtal</button></div>"
+    :"";
+  b.innerHTML=chatHtml+btns
+    +"<div class='row'><input class='inp' id='tinp' placeholder='Skriv dina tankar...' value='"+esc(tInput)+"'/><button class='abtn' id='tsend'>&#8594;</button></div>"
+    +savedHist;
+  var ti=b.querySelector("#tinp");
+  if(ti){
+    ti.oninput=function(){tInput=ti.value;};
+    ti.onkeydown=function(e){if(e.key==="Enter"&&!e.shiftKey&&ti.value.trim()){e.preventDefault();doSendTerapi(ti.value.trim());}};
+    if(!tLoading)setTimeout(function(){ti.focus();},50);
+  }
+  b.querySelector("#tsend").onclick=function(){var v=b.querySelector("#tinp").value.trim();if(v)doSendTerapi(v);};
+  if(tMessages.length){
+    b.querySelector("#tsave").onclick=function(){
+      var summary=tMessages[0]?tMessages[0].content.slice(0,60)+"...":"Samtal";
+      tHist=[{id:Date.now(),summary:summary,messages:tMessages.slice(),timestamp:new Date().toISOString()}].concat(tHist).slice(0,20);
+      tMessages=[];tInput="";saveAndSync();renderTerapi();
+    };
+    b.querySelector("#tclear").onclick=function(){tMessages=[];tInput="";renderTerapi();};
+  }
+  bindHist(b,"tidx",
+    function(i){tMessages=tHist[i].messages.slice();renderTerapi();},
+    function(i){tHist.splice(i,1);saveAndSync();renderTerapi();}
+  );
+  // Scroll chat to bottom
+  var ca=b.querySelector(".chat-area");if(ca)ca.scrollTop=ca.scrollHeight;
+}
+async function doSendTerapi(text){
+  tMessages.push({role:"user",content:text});
+  tInput="";tLoading=true;renderTerapi();
+  var sys="Du ar en empatisk samtalsstod. Lyssna aktivt, stalla genomtankta foljdfragor och hjalp personen reflektera over sina tankar och ideer. Ge rad nar det frages men fokusera annars pa att hjalpa personen tanka igenom sina egna losningar. Svara pa svenska, var varm. Halla svaren kortfattade (max 3-4 meningar).";
+  var history=tMessages.slice(-12).map(function(m){return {role:m.role,content:m.content};});
+  try{
+    var res=await aiChat(sys,history,600);
+    var data=await res.json();
+    var reply=data.choices&&data.choices[0]?data.choices[0].message.content||"":"Kunde inte svara. Forsok igen.";
+    tMessages.push({role:"assistant",content:reply});
+  }catch(e){tMessages.push({role:"assistant",content:"Nagot gick fel. Forsok igen."});}
+  tLoading=false;renderTerapi();
+}
+
+// ---- AI-TIPS ----
+function renderTips(){
+  var b=document.getElementById("body");
+  if(tipsLoading){b.innerHTML=spin();return;}
+  if(tipText){
+    b.innerHTML="<div class='lbl'>Tips om: "+esc(tipTopic||"dina aktiviteter")+"</div>"
+      +"<div class='tbox'>"+esc(tipText)+"</div>"
+      +"<button class='sec ghost' id='refbtn'>Fraga om nagot annat</button>";
+    b.querySelector("#refbtn").onclick=function(){tipText="";tipTopic="";renderTips();};
+    return;
+  }
+  b.innerHTML="<div class='eico' style='text-align:center;padding-top:20px'>🤖</div>"
+    +"<div style='text-align:center;margin:12px 0 20px;font-size:14px;color:#6b6880;line-height:1.6'>Vad vill du ha tips om?<br><span style='font-size:12px'>Kan vara vad som helst - traning, vanor, produktivitet, somn...</span></div>"
+    +"<div class='lbl'>Amne</div>"
+    +"<textarea class='ta' id='topicin' placeholder='T.ex. hur sover jag battre, tips for att lasa mer...' style='min-height:90px'>"+esc(tipTopic)+"</textarea>"
+    +"<button class='sec' id='getbtn'>Ge mig tips</button>"
+    +"<div style='display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px'>"
+    +"<button class='sec ghost' id='skamtbtn'>Skämt</button>"
+    +"<button class='sec ghost' id='savedskamtbtn'>Sparat Skämt</button>"
+    +"</div>"
+    +"<div id='joke-result'></div>"
+    +(tipsHistory.length?"<div class='mt20'><div class='lbl'>Tidigare tips</div>"
+    +tipsHistory.map(function(t,i){
+      return "<div style='margin-bottom:12px;padding:12px;background:#0c1119;border:1px solid #141d27;border-radius:10px'>"
+        +"<div style='font-size:11px;color:#6b7785;margin-bottom:4px'>"+esc(t.topic)+" · "+fd(t.timestamp)+"</div>"
+        +"<div style='font-size:13px;color:#e4ecf7;line-height:1.5'>"+esc(t.text.slice(0,150)+(t.text.length>150?"...":""))+"</div>"
+        +"<button data-showtip='"+i+"' style='font-size:11px;color:#00d4ff;background:none;border:none;cursor:pointer;margin-top:4px;padding:0'>Visa hela →</button>"
+        +"</div>";
+    }).join("")
+    +"</div>":"");
+  var ta=b.querySelector("#topicin");
+  if(ta)ta.oninput=function(){tipTopic=ta.value;};
+  b.querySelector("#getbtn").onclick=function(){
+    var topic=b.querySelector("#topicin").value.trim();
+    if(!topic)return;
+    tipTopic=topic;fetchTips();
+  };
+  b.querySelector("#skamtbtn").onclick=function(){fetchSkamt();};
+  var ssb=b.querySelector("#savedskamtbtn");
+  if(ssb)ssb.onclick=function(){fetchSparatSkamt();};
+  b.querySelectorAll("[data-showtip]").forEach(function(btn){
+    btn.onclick=function(){
+      var i=parseInt(btn.dataset.showtip);
+      var t=tipsHistory[i];
+      if(!t)return;
+      tipText=t.text;tipTopic=t.topic;renderTips();
+    };
+  });
+}
+
+var SKAMT=[
+  "Varför kan man aldrig lita på en trappa? Den är alltid upp till något.",
+  "Vad kallas en boomerang som inte kommer tillbaka? En pinne.",
+  "Vad sa väggen till den andra väggen? Vi ses i hörnet.",
+  "Jag åt en klocka igår. Det var tidskrävande.",
+  "Har du hört skämtet om hopprepet? Nej, vi hoppar det.",
+  "Vad är skillnaden mellan ignorans och apati? Jag vet inte och jag bryr mig inte.",
+  "Jag tänkte dra ett skämt om en hammare men det slog inte rätt.",
+  "Vilken fransk byggnad har alltid rätt? Ej-feltornet.",
+  "Varför gick bajskorven till polisen? Han kände sig utpressad.",
+  "Jag tänkte bjuda en zombie på middag. Jag lovar att han äter mer än hjärna.",
+  "Vilken fest är mest allergiframkallande? Hö-balen.",
+  "Bagaren får ju inte bli medlem, men han kan få delta i mötet som jäst.",
+  "En groda hamnade på sjukhus för att han tappade benen. Vad kallade personalen honom? Ett hopplöst fall.",
+  "Varför kliar du dig så mycket? Jag fick skin(n)klåda till middag.",
+  "Jag tänkte dra ett skämt om Titanic men ville inte sjunka så lågt.",
+  "Varför är det så många rullstolsbundna på golfbanan? De försöker minska sitt handicap.",
+  "Vad händer om man sväljer linjaler? Man blir mätt i magen.",
+  "I vilken stad sitter man längst i bilköer? Konstant-in-opel.",
+  "Vad är skillnaden på ett lejon och en giraff? En giraff har en större hals.",
+  "Har du hört skämtet om staketet? Annars hoppar vi över det.",
+  "När jag tidigare arbetade på flyttfirma fick jag en möbel i huvudet. Det var en skänk från ovan.",
+  "Vill du höra ett torrt skämt? Jaa. Afrika.",
+  "Jag är dålig på att räkna bråk. Jag är konflikträdd.",
+  "Varför kastade pojken ut klockan från fönstret? Han ville se tiden flyga iväg.",
+  "Har du hört om läkaren som blev ryttare? Han sadlade om.",
+  "Vad kallar man en hund utan ben? Spelar ingen roll, den kommer ändå inte.",
+  "Jag berättade ett skämt om luft. Det gick över huvudet.",
+  "Jag kan inte lita på kalendern. Den är full av datum.",
+  "Vad gör en elektriker när han är arg? Får kortslutning.",
+  "Varför gick boken till doktorn? Den hade för många problem.",
+  "Två kor står på en betesmark. Plötsligt säger den ene: Muuuhh. Besviket säger den andra: Det skulle ju jag precis säga.",
+  "Vet du hur långt Norges första elbil gick? Nej. 27 meter, sedan räckte inte sladden längre.",
+  "Varför äter fransmän sniglar? De har inte råd med snabbmat.",
+  "Vad är den ledande orsaken till torr hud? Handdukar.",
+  "Vilken julsång borde vara olaglig att sjunga på ett ålderdomshem? Last Christmas."
+];
+
+async function fetchSkamt(){
+  var jd=document.getElementById("joke-result");
+  if(!jd)return;
+  var joke=SKAMT[Math.floor(Math.random()*SKAMT.length)];
+  jd.innerHTML="<div style='margin-top:16px;padding:16px;background:#0c1119;border-radius:12px;border:1px solid #141d27;font-size:15px;color:#e4ecf7;line-height:1.6;text-align:center'>"+esc(joke)+"</div>"
+    +"<div style='display:flex;gap:8px;margin-top:8px'>"
+    +"<button class='sec ghost' id='savejokebtn' style='flex:1;font-size:12px;padding:8px'>Spara skämt</button>"
+    +"<div id='savejoke-ok' style='display:none;font-size:12px;color:#4ade80;align-self:center'>✓ Sparat!</div>"
+    +"</div>";
+  var saveBtn=jd.querySelector("#savejokebtn");
+  if(saveBtn){
+    saveBtn.onclick=function(){
+      if(!savedJokes.includes(joke)){savedJokes.push(joke);saveAndSync();}
+      saveBtn.textContent="Sparad!";saveBtn.disabled=true;
+    };
+  }
+}
+function fetchSparatSkamt(){
+  var jd=document.getElementById("joke-result");
+  if(!jd)return;
+  if(!savedJokes.length){
+    jd.innerHTML="<div style='margin-top:16px;padding:14px;background:#0c1119;border-radius:12px;border:1px solid #141d27;font-size:13px;color:#6b6880;text-align:center'>Inga sparade skämt ännu. Klicka Skämt och spara ett!</div>";
+    return;
+  }
+  var joke=savedJokes[Math.floor(Math.random()*savedJokes.length)];
+  jd.innerHTML="<div style='margin-top:16px;padding:16px;background:#0c1119;border-radius:12px;border:1px solid #00d4ff;font-size:15px;color:#e4ecf7;line-height:1.6;text-align:center'>"+esc(joke)+"</div>"
+    +"<div style='font-size:11px;color:#4a5563;text-align:center;margin-top:6px'>"+savedJokes.length+" sparade skämt</div>";
+}
+
+async function fetchTips(){
+  tipsLoading=true;tipText="";renderTips();
+  var sum=logs.slice(0,20).map(function(l){return "["+l.category+"] "+l.activity+(l.note?": "+l.note:"");}).join("\n")||"Inga aktiviteter loggade.";
+  var prompt="Tips om: "+tipTopic+"\n\nAktiviteter for kontext:\n"+sum+"\n\nGe 3-5 konkreta, personliga tips pa svenska.";
+  try{
+    var res=await aiCall("Du ar en coach som ger personliga, konkreta tips pa svenska anpassade till amnet anvandaren fragar om. Hall det kort och actionbart.",prompt,1000);
+    var data=await res.json();tipText=aiText(data)||"Kunde inte hamta tips.";
+    if(tipText&&tipText!=="Kunde inte hamta tips."){
+      tipsHistory.unshift({topic:tipTopic,text:tipText,timestamp:new Date().toISOString()});
+      if(tipsHistory.length>5)tipsHistory.length=5;
+    }
+  }catch(e){tipText="Nagot gick fel. Forsok igen.";}
+  tipsLoading=false;renderTips();
+}
+
+// ---- INSTALLNINGAR ----
+function renderInstallningar(){
+  var b=document.getElementById("body");
+  var currentModel=MODELS.find(function(m){return m.id===selectedModel;})||MODELS[0];
+
+  // Build month options from available data
+  var months={};
+  var addToMonths=function(ts){var d=new Date(ts);var key=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");months[key]=true;};
+  logs.forEach(function(l){addToMonths(l.timestamp);});
+  fundHist.forEach(function(f){addToMonths(f.timestamp);});
+  sentConvs.forEach(function(cv){addToMonths(cv.timestamp);});
+  var monthKeys=Object.keys(months).sort(function(a,b){return b.localeCompare(a);});
+  var MONTHS=["Januari","Februari","Mars","April","Maj","Juni","Juli","Augusti","September","Oktober","November","December"];
+  var monthOptions=monthKeys.map(function(k){var parts=k.split("-");return "<option value='"+k+"'>"+MONTHS[parseInt(parts[1])-1]+" "+parts[0]+"</option>";}).join("");
+
+  b.innerHTML="<div class='lbl'>AI-modell</div>"
+    +"<div style='margin-bottom:20px;font-size:13px;color:#6b6880;line-height:1.5'>Vald modell: <span style='color:#00d4ff;font-weight:600'>"+esc(currentModel.name)+"</span></div>"
+    +MODELS.map(function(m){
+      var active=m.id===selectedModel;
+      return "<div data-modelid='"+esc(m.id)+"' style='"
+        +"padding:14px 16px;border-radius:12px;border:1px solid "+(active?"#00d4ff":"#1c2733")+";"
+        +"background:"+(active?"#0a2933":"#10151f")+";margin-bottom:10px;cursor:pointer'>"
+        +"<div style='display:flex;align-items:center;gap:10px'>"
+        +"<div style='width:10px;height:10px;border-radius:50%;background:"+(active?"#00d4ff":"#3a3a50")+";flex-shrink:0'></div>"
+        +"<div>"
+        +"<div style='font-size:14px;font-weight:"+(active?"600":"400")+";color:"+(active?"#e4ecf7":"#c4c0d4")+"'>"+esc(m.name)+"</div>"
+        +"<div style='font-size:12px;color:#6b6880;margin-top:2px'>"+esc(m.desc)+"</div>"
+        +"</div></div></div>";
+    }).join("")
+    +"<div style='margin-top:24px;padding:14px;background:#10151f;border-radius:12px;border:1px solid #141d27;font-size:12px;color:#4a4860;line-height:1.6'>"
+    +"Modellen galler for alla AI-funktioner i appen.</div>"
+    +"<div class='mt20'><div class='lbl'>Exportera Manad</div>"
+    +"<div style='font-size:13px;color:#6b6880;margin-bottom:12px;line-height:1.5'>Valj en manad och format for att ladda ner alla inlagg.</div>"
+    +(monthKeys.length
+      ?"<select id='pdfmonth' style='width:100%;padding:11px 13px;border-radius:10px;background:#10151f;border:1px solid #1c2733;color:#e4ecf7;font-size:14px;margin-bottom:10px;font-family:inherit'>"
+        +monthOptions+"</select>"
+        +"<select id='exportformat' style='width:100%;padding:11px 13px;border-radius:10px;background:#10151f;border:1px solid #1c2733;color:#e4ecf7;font-size:14px;margin-bottom:10px;font-family:inherit'><option value='pdf'>PDF</option><option value='json'>JSON</option></select>"
+        +"<button class='sec' id='pdfbtn'>Ladda ner</button>"
+      :"<div style='padding:12px;background:#0c1119;border-radius:10px;font-size:13px;color:#4a4860'>Inga inlagg att exportera annu.</div>")
+    +"</div>"
+    +"<div class='mt20'><div class='lbl'>Exportera till JSON</div>"
+    +"<div style='font-size:13px;color:#6b6880;margin-bottom:12px;line-height:1.5'>Ladda ner all data som en JSON-fil. Anvand som backup eller for att flytta data.</div>"
+    +"<button class='sec ghost' id='jsonexportbtn'>Ladda ner JSON-backup</button>"
+    +"</div>"
+    +"<div class='mt20'><div class='lbl'>Importera fran JSON</div>"
+    +"<div style='font-size:13px;color:#6b6880;margin-bottom:12px;line-height:1.5'>Ladda in data fran en tidigare JSON-backup. Befintlig data slas ihop med importerad data.</div>"
+    +"<label style='display:block;padding:10px;background:#0c1119;border:1px dashed #1c2733;border-radius:10px;text-align:center;cursor:pointer;font-size:13px;color:#6b6880'>"
+    +"📂 Valj JSON-fil att importera"
+    +"<input type='file' id='jsonimportfile' accept='.json,application/json' style='display:none'/></label>"
+    +"<div id='importstatus'></div>"
+    +"</div>"
+    +"<div class='mt20'><div class='lbl'>Exportera skämt (CSV)</div>"
+    +"<div style='font-size:13px;color:#6b6880;margin-bottom:12px;line-height:1.5'>Ladda ner alla sparade skämt som en CSV-fil.</div>"
+    +"<button class='sec ghost' id='csvexportbtn'>Ladda ner CSV</button>"
+    +"</div>"
+    +"<div class='mt20'><div class='lbl'>Importera skämt (CSV)</div>"
+    +"<div style='font-size:13px;color:#6b6880;margin-bottom:12px;line-height:1.5'>Ersätt skämtlistan med innehållet i en ny CSV-fil (en skämt per rad).</div>"
+    +"<label style='display:block;padding:10px;background:#0c1119;border:1px dashed #1c2733;border-radius:10px;text-align:center;cursor:pointer;font-size:13px;color:#6b6880'>"
+    +"📂 Välj CSV-fil"
+    +"<input type='file' id='csvimportfile' accept='.csv' style='display:none'/></label>"
+    +"<div id='csvstatus'></div>"
+    +"</div>"
+    +"<div class='mt20'><div class='lbl'>Exportera Media (CSV)</div>"
+    +"<div style='font-size:13px;color:#6b6880;margin-bottom:12px;line-height:1.5'>Ladda ner alla sparade mediainlägg som CSV-filer per kategori.</div>"
+    +"<button class='sec ghost' id='mediaexportbtn'>Ladda ner Media CSV</button>"
+    +"</div>"
+    +"<div class='mt20'><div class='lbl'>Importera Media (CSV)</div>"
+    +"<div style='font-size:13px;color:#6b6880;margin-bottom:12px;line-height:1.5'>Importera en komplett media-CSV med alla kategorier (ersätter hela listan).</div>"
+    +"<label style='display:block;padding:10px;background:#0c1119;border:1px dashed #1c2733;border-radius:10px;text-align:center;cursor:pointer;font-size:13px;color:#6b6880'>"
+    +"📂 Välj media CSV-fil"
+    +"<input type='file' id='mediaimportfile' accept='.csv' style='display:none'/></label>"
+    +"<div id='mediastatus'></div>"
+    +"</div>"
+    +"<div class='mt20'><div class='lbl'>Ladda ner alla bilder</div>"
+    +"<div style='font-size:13px;color:#6b6880;margin-bottom:12px;line-height:1.5'>Ladda ner alla uppladdade bilder som JPEG-filer.</div>"
+    +"<button class='sec ghost' id='downloadallimgsbtn'>"+(imageHist.length?"Ladda ner "+imageHist.length+" bilder":"Inga bilder att ladda ner")+"</button>"
+    +"</div>"
+    +"<div class='mt20' style='border-top:1px solid #1c2733;padding-top:20px'>"
+    +"<div class='lbl' style='color:#f87171'>Rensa data</div>"
+    +"<div style='font-size:13px;color:#6b6880;margin-bottom:12px;line-height:1.5'>Tar bort all inmatad data permanent. Det går inte att angra.</div>"
+    +"<button id='clearbtn' style='width:100%;padding:13px;border-radius:12px;background:#1a0a0a;border:1px solid #4a1a1a;color:#f87171;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit'>Rensa all data</button>"
+    +"</div>";
+
+  b.querySelectorAll("[data-modelid]").forEach(function(el){
+    el.onclick=function(){
+      selectedModel=el.dataset.modelid;
+      try{localStorage.setItem("selected_model",selectedModel);}catch(e){}
+      renderInstallningar();
+    };
+  });
+  var pdfBtn=b.querySelector("#pdfbtn");
+  if(pdfBtn){
+    pdfBtn.onclick=function(){
+      var sel=b.querySelector("#pdfmonth");
+      var fmt=b.querySelector("#exportformat");
+      if(!sel)return;
+      if(fmt&&fmt.value==="json")exportJsonMonth(sel.value);
+      else exportPdf(sel.value);
+    };
+  }
+  var jsonExportBtn=b.querySelector("#jsonexportbtn");
+  if(jsonExportBtn)jsonExportBtn.onclick=function(){exportJson();};
+  var jsonImportFile=b.querySelector("#jsonimportfile");
+  if(jsonImportFile)jsonImportFile.onchange=function(){if(jsonImportFile.files&&jsonImportFile.files[0])importJson(jsonImportFile.files[0]);};
+  var csvExportBtn=b.querySelector("#csvexportbtn");
+  if(csvExportBtn)csvExportBtn.onclick=function(){exportCsv();};
+  var csvImportFile=b.querySelector("#csvimportfile");
+  if(csvImportFile)csvImportFile.onchange=function(){if(csvImportFile.files&&csvImportFile.files[0])importCsv(csvImportFile.files[0]);};
+  var mediaExportBtn=b.querySelector("#mediaexportbtn");
+  if(mediaExportBtn)mediaExportBtn.onclick=function(){exportMediaCsv();};
+  var mediaImportFile=b.querySelector("#mediaimportfile");
+  if(mediaImportFile)mediaImportFile.onchange=function(){
+    if(mediaImportFile.files&&mediaImportFile.files[0])importMediaCsv(mediaImportFile.files[0],null);
+  };
+  var dlAllImgs=b.querySelector("#downloadallimgsbtn");
+  if(dlAllImgs&&imageHist.length){
+    dlAllImgs.onclick=function(){downloadAllImages();};
+  }
+  var clearBtn=b.querySelector("#clearbtn");
+  if(clearBtn){
+    clearBtn.onclick=function(){
+      if(confirm("Ar du säker? All data raderas permanent och kan inte aterstallas.")){
+        logs=[];kHist=[];sHist=[];oHist=[];fHist=[];tHist=[];synHist=[];
+        sentMsgs=[];sentPeople=[];sentConvs=[];fundHist=[];
+        saveAndSync();
+        renderInstallningar();
+        var st=document.getElementById("importstatus");
+        if(st){st.innerHTML="<div style='color:#4ade80;font-size:13px;margin-top:8px;text-align:center'>All data har rensats.</div>";}
+      }
+    };
+  }
+}
+
+function exportJson(){
+  var data={
+    version:1,
+    exportedAt:new Date().toISOString(),
+    logs:logs,kHist:kHist,sHist:sHist,oHist:oHist,fHist:fHist,
+    tHist:tHist,synHist:synHist,sentMsgs:sentMsgs,
+    sentPeople:sentPeople,sentConvs:sentConvs,fundHist:fundHist
+  };
+  var json=JSON.stringify(data,null,2);
+  var blob=new Blob([json],{type:"application/json"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");
+  a.href=url;
+  a.download="ai-assistent-backup-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importJson(file){
+  var st=document.getElementById("importstatus");
+  if(st)st.innerHTML="<div style='color:#6b6880;font-size:13px;margin-top:8px;text-align:center'>Importerar...</div>";
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      if(!data||typeof data!=="object"){throw new Error("Ogiltig fil");}
+      function mergeArr(a,b){
+        var map=new Map();
+        (a||[]).concat(b||[]).forEach(function(x){map.set(String(x.id||x.timestamp),x);});
+        return Array.from(map.values()).sort(function(a,b){return new Date(b.timestamp)-new Date(a.timestamp);});
+      }
+      logs=mergeArr(logs,data.logs);
+      kHist=mergeArr(kHist,data.kHist);
+      sHist=mergeArr(sHist,data.sHist);
+      oHist=mergeArr(oHist,data.oHist);
+      fHist=mergeArr(fHist,data.fHist);
+      tHist=mergeArr(tHist,data.tHist);
+      synHist=mergeArr(synHist,data.synHist);
+      sentMsgs=mergeArr(sentMsgs,data.sentMsgs);
+      sentPeople=mergeArr(sentPeople,data.sentPeople);
+      sentConvs=mergeArr(sentConvs,data.sentConvs);
+      fundHist=mergeArr(fundHist,data.fundHist);
+      saveAndSync();
+      var count=logs.length+fundHist.length+sentConvs.length;
+      if(st)st.innerHTML="<div style='color:#4ade80;font-size:13px;margin-top:8px;text-align:center'>✓ Import klar — "+count+" poster inladdade.</div>";
+    }catch(err){
+      if(st)st.innerHTML="<div style='color:#f87171;font-size:13px;margin-top:8px;text-align:center'>Fel: "+esc(err.message)+". Kontrollera att filen ar en giltig JSON-backup.</div>";
+    }
+  };
+  reader.onerror=function(){if(st)st.innerHTML="<div style='color:#f87171;font-size:13px;margin-top:8px'>Kunde inte lasa filen.</div>";};
+  reader.readAsText(file);
+}
+
+function exportMediaCsv(){
+  var MEDIA_CAT_LABELS={bok:"Bok",musik:"Musik",film:"Film",serie:"Serie",podcast:"Podcast",videodelning:"Videodelning",spel:"Spel",ovrigt:"Ovrigt"};
+  var allCats=["bok","musik","film","serie","podcast","videodelning","spel","ovrigt"];
+  var sections=allCats.map(function(k){
+    var items=(mediaList[k]||[]).map(function(j){return '"'+j.replace(/"/g,'""')+'"';}).join(",\n");
+    return "-> \""+MEDIA_CAT_LABELS[k]+"\":\n"+(items||"");
+  });
+  var csv=sections.join("\n\n");
+  // Always add FÄRDIGA section with all categories
+  var fardigSections={};
+  (mediaFardig||[]).forEach(function(e){
+    if(!fardigSections[e.cat])fardigSections[e.cat]=[];
+    fardigSections[e.cat].push(e);
+  });
+  csv+="\n\n->FÄRDIGA<-";
+  allCats.forEach(function(k){
+    var entries=fardigSections[k]||[];
+    csv+="\n\n-> \""+MEDIA_CAT_LABELS[k]+"\":\n";
+    if(entries.length){
+      csv+=entries.map(function(e){
+        return '"'+e.title.replace(/"/g,'""')+'", betyg:'+e.rating+(e.comment?', kommentar:"'+e.comment.replace(/"/g,'""')+'"':"");
+      }).join(",\n");
+    }
+  });
+  var blob=new Blob(["\uFEFF"+csv.trim()],{type:"text/csv;charset=utf-8"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");
+  a.href=url;a.download="media-"+new Date().toISOString().slice(0,10)+".csv";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function importMediaCsv(file,cat){
+  var st=document.getElementById("mediastatus");
+  if(st)st.innerHTML="<div style='color:#6b6880;font-size:13px;margin-top:8px'>Importerar...</div>";
+  var CAT_MAP={"Bok":"bok","Musik":"musik","Film":"film","Serie":"serie","Podcast":"podcast","Videodelning":"videodelning","Spel":"spel","Ovrigt":"ovrigt","Övrigt":"ovrigt"};
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var text=e.target.result.replace(/^\uFEFF/,"").replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+
+      // Split into pending and fardig sections at ->FÄRDIGA<-
+      var fardigSplit=text.split("->FÄRDIGA<-");
+      var pendingText=fardigSplit[0];
+      var fardigText=fardigSplit.length>1?fardigSplit[1]:"";
+
+      function parseSections(txt){
+        // Find all -> "Kategori": blocks
+        var result={};
+        var regex=/-> "([^"]+)":\n([\s\S]*?)(?=\n-> "|$)/g;
+        var m;
+        while((m=regex.exec(txt))!==null){
+          var catName=m[1].trim();
+          var catKey=CAT_MAP[catName];
+          if(!catKey)continue;
+          var raw=m[2].trim();
+          // Accept both ",\n" and plain "\n" as separator between items
+          var lines=raw.split(/,?\n/).map(function(l){return l.trim().replace(/^"|"$/g,"").replace(/""/g,'"');}).filter(function(l){return l.length>0;});
+          result[catKey]=lines;
+        }
+        return result;
+      }
+
+      // Parse pending
+      var newMedia={bok:[],musik:[],film:[],serie:[],podcast:[],videodelning:[],spel:[],ovrigt:[]};
+      var parsed=parseSections(pendingText);
+      Object.keys(parsed).forEach(function(k){newMedia[k]=parsed[k];});
+      mediaList=newMedia;
+
+      // Parse FÄRDIGA if present
+      if(fardigText){
+        var newFardig=[];
+        var fregex=/-> "([^"]+)":\n([\s\S]*?)(?=\n-> "|$)/g;
+        var fm;
+        while((fm=fregex.exec(fardigText))!==null){
+          var catName=fm[1].trim();
+          var catKey=CAT_MAP[catName];
+          if(!catKey)continue;
+          fm[2].trim().split(/,?\n/).forEach(function(line){
+            line=line.trim();
+            if(!line)return;
+            // Format: "Titel", betyg:N, kommentar:"..."
+            var titleM=line.match(/^"((?:[^"\\]|\\.)*)"/);
+            if(!titleM)return;
+            var title=titleM[1].replace(/""/g,'"');
+            var ratingM=line.match(/betyg:(\d)/);
+            var commentM=line.match(/kommentar:"((?:[^"\\]|\\.)*)"/);
+            newFardig.push({
+              title:title,cat:catKey,
+              rating:ratingM?parseInt(ratingM[1]):0,
+              comment:commentM?commentM[1]:"",
+              timestamp:new Date().toISOString()
+            });
+          });
+        }
+        mediaFardig=newFardig;
+      }
+
+      saveAndSync();
+      var totalPending=Object.values(newMedia).reduce(function(s,a){return s+a.length;},0);
+      if(st)st.innerHTML="<div style='color:#4ade80;font-size:13px;margin-top:8px'>✓ "+totalPending+" att konsumera, "+(fardigText?mediaFardig.length:0)+" färdiga inladdade.</div>";
+    }catch(err){
+      if(st)st.innerHTML="<div style='color:#f87171;font-size:13px;margin-top:8px'>Fel: "+esc(err.message)+"</div>";
+    }
+  };
+  reader.readAsText(file,"UTF-8");
+}
+
+function downloadAllImages(){
+  if(!imageHist.length){alert("Inga bilder att ladda ner.");return;}
+  imageHist.forEach(function(img,idx){
+    var d=new Date(img.timestamp);
+    var yy=String(d.getFullYear()).slice(-2);
+    var mm=String(d.getMonth()+1).padStart(2,"0");
+    var dd=String(d.getDate()).padStart(2,"0");
+    var title=img.activity||"bild";
+    var fname=yy+"-"+mm+"-"+dd+(title?", "+title:"");
+    // Convert to JPEG via canvas if needed
+    var dataUrl="data:"+(img.mtype||"image/jpeg")+";base64,"+img.base64;
+    var canvas=document.createElement("canvas");
+    var image=new Image();
+    image.onload=function(){
+      canvas.width=image.width;canvas.height=image.height;
+      var ctx=canvas.getContext("2d");
+      ctx.fillStyle="#ffffff";ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(image,0,0);
+      var jpegUrl=canvas.toDataURL("image/jpeg",0.92);
+      var a=document.createElement("a");
+      a.href=jpegUrl;a.download=fname+".jpg";
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+    };
+    image.src=dataUrl;
+  });
+}
+
+function exportCsv(){
+  if(!savedJokes.length){alert("Inga sparade skämt att exportera.");return;}
+  var csv=savedJokes.map(function(j){return '"'+j.replace(/"/g,'""')+'"';}).join(",\n");
+  var blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");
+  a.href=url;a.download="skamt-"+new Date().toISOString().slice(0,10)+".csv";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function importCsv(file){
+  var st=document.getElementById("csvstatus");
+  if(st)st.innerHTML="<div style='color:#6b6880;font-size:13px;margin-top:8px'>Importerar...</div>";
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var text=e.target.result.replace(/^\uFEFF/,"");
+      // Split on ",\n" separator
+      var jokes=text.split(",\n").map(function(l){return l.trim().replace(/^"|"$/g,"").replace(/""/g,'"');}).filter(function(l){return l.length>0;});
+      if(!jokes.length)throw new Error("Inga skämt hittades i filen.");
+      savedJokes=jokes;saveAndSync();
+      if(st)st.innerHTML="<div style='color:#4ade80;font-size:13px;margin-top:8px'>✓ "+jokes.length+" skämt inladdade.</div>";
+    }catch(err){
+      if(st)st.innerHTML="<div style='color:#f87171;font-size:13px;margin-top:8px'>Fel: "+esc(err.message)+"</div>";
+    }
+  };
+  reader.readAsText(file,"UTF-8");
+}
+
+function exportJsonMonth(monthKey){
+  var parts=monthKey.split("-");
+  var year=parseInt(parts[0]),month=parseInt(parts[1])-1;
+  var start=new Date(year,month,1);
+  var end=new Date(year,month+1,0,23,59,59,999);
+  var inMonth=function(ts){var d=new Date(ts);return d>=start&&d<=end;};
+  var MONTHS=["Januari","Februari","Mars","April","Maj","Juni","Juli","Augusti","September","Oktober","November","December"];
+
+  var data={
+    version:1,
+    period:MONTHS[month]+" "+year,
+    exportedAt:new Date().toISOString(),
+    logs:logs.filter(function(l){return inMonth(l.timestamp);}),
+    fundHist:fundHist.filter(function(f){return inMonth(f.timestamp);}),
+    sentConvs:sentConvs.filter(function(cv){return inMonth(cv.timestamp);}),
+    sentMsgs:sentMsgs.filter(function(m){
+      var cv=sentConvs.find(function(c){return c.id===m.convId;});
+      return cv&&inMonth(cv.timestamp);
+    }),
+    sentPeople:sentPeople
+  };
+
+  var json=JSON.stringify(data,null,2);
+  var blob=new Blob([json],{type:"application/json"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");
+  a.href=url;
+  a.download="ai-assistent-"+monthKey+".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportPdf(monthKey){
+  var parts=monthKey.split("-");
+  var year=parseInt(parts[0]),month=parseInt(parts[1])-1;
+  var MONTHS=["Januari","Februari","Mars","April","Maj","Juni","Juli","Augusti","September","Oktober","November","December"];
+  var DAYS=["Sondag","Mandag","Tisdag","Onsdag","Torsdag","Fredag","Lordag"];
+  var monthName=MONTHS[month]+" "+year;
+
+  var start=new Date(year,month,1);
+  var end=new Date(year,month+1,0,23,59,59,999);
+
+  var inMonth=function(ts){var d=new Date(ts);return d>=start&&d<=end;};
+
+  var monthLogs=logs.filter(function(l){return inMonth(l.timestamp);})
+    .sort(function(a,b){return new Date(a.timestamp)-new Date(b.timestamp);});
+  var monthFund=fundHist.filter(function(f){return inMonth(f.timestamp);})
+    .sort(function(a,b){return new Date(a.timestamp)-new Date(b.timestamp);});
+  var monthConvs=sentConvs.filter(function(cv){return inMonth(cv.timestamp);})
+    .sort(function(a,b){return new Date(a.timestamp)-new Date(b.timestamp);});
+
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    +'<title>AI-Assistent - '+monthName+'</title>'
+    +'<style>'
+    +'body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:32px;color:#1a1a1a;line-height:1.6;}'
+    +'h1{font-size:26px;font-weight:700;border-bottom:3px solid #1a1a1a;padding-bottom:10px;margin-bottom:8px;}'
+    +'.meta{font-size:13px;color:#666;margin-bottom:32px;}'
+    +'h2{font-size:18px;font-weight:700;margin:32px 0 12px;padding:8px 12px;background:#f0f0f0;border-left:4px solid #1a1a1a;}'
+    +'h3{font-size:14px;font-weight:700;margin:16px 0 4px;color:#333;}'
+    +'.entry{padding:10px 0;border-bottom:1px solid #e0e0e0;}'
+    +'.entry:last-child{border-bottom:none;}'
+    +'.timestamp{font-size:11px;color:#888;margin-bottom:2px;}'
+    +'.title{font-size:14px;font-weight:600;}'
+    +'.note{font-size:13px;color:#555;margin-top:2px;}'
+    +'.tag{display:inline-block;padding:2px 8px;border-radius:20px;background:#e8e8e8;font-size:11px;font-weight:600;margin-right:4px;}'
+    +'.bubble-me{background:#d4edff;padding:6px 10px;border-radius:8px;margin:4px 0;font-size:13px;}'
+    +'.bubble-them{background:#f0f0f0;padding:6px 10px;border-radius:8px;margin:4px 0;font-size:13px;}'
+    +'.sender{font-size:11px;font-weight:600;color:#555;margin-bottom:2px;}'
+    +'.fund-text{font-size:14px;white-space:pre-wrap;}'
+    +'@media print{body{padding:16px;}h2{break-before:auto;}}'
+    +'</style></head><body>';
+
+  html+='<h1>AI-Assistent</h1><div class="meta">Export for '+monthName+' &nbsp;|&nbsp; Skapad '+new Date().toLocaleDateString("sv-SE")+'</div>';
+
+  // AKTIVITETER
+  if(monthLogs.length){
+    html+='<h2>Aktiviteter ('+monthLogs.length+')</h2>';
+    // Group by day
+    var byDay={};
+    monthLogs.forEach(function(l){
+      var d=new Date(l.timestamp);
+      var dk=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+      if(!byDay[dk])byDay[dk]={date:d,items:[]};
+      byDay[dk].items.push(l);
+    });
+    Object.keys(byDay).sort().forEach(function(dk){
+      var dd=byDay[dk];
+      html+='<h3>'+DAYS[dd.date.getDay()]+' '+dd.date.getDate()+' '+MONTHS[dd.date.getMonth()]+'</h3>';
+      dd.items.forEach(function(l){
+        var ct=CATS.find(function(c){return c.id===l.category;});
+        html+='<div class="entry">'
+          +'<div class="timestamp">'+new Date(l.timestamp).toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"})+(l.time?' &middot; '+esc(l.time):'')+'</div>'
+          +'<div class="title">'+(ct?ct.e+' ':'')+esc(l.activity)+'</div>'
+          +(l.note?'<div class="note">'+esc(l.note)+'</div>':'')
+          +'</div>';
+      });
+    });
+  }
+
+  // FUNDERINGAR
+  if(monthFund.length){
+    html+='<h2>Funderingar ('+monthFund.length+')</h2>';
+    var byDayF={};
+    monthFund.forEach(function(f){
+      var d=new Date(f.timestamp);
+      var dk=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+      if(!byDayF[dk])byDayF[dk]={date:d,items:[]};
+      byDayF[dk].items.push(f);
+    });
+    Object.keys(byDayF).sort().forEach(function(dk){
+      var dd=byDayF[dk];
+      html+='<h3>'+DAYS[dd.date.getDay()]+' '+dd.date.getDate()+' '+MONTHS[dd.date.getMonth()]+'</h3>';
+      dd.items.forEach(function(f){
+        html+='<div class="entry">'
+          +'<div class="timestamp">'+new Date(f.timestamp).toLocaleTimeString("sv-SE",{hour:"2-digit",minute:"2-digit"})+'</div>'
+          +'<div class="fund-text">'+esc(f.text)+'</div>'
+          +'</div>';
+      });
+    });
+  }
+
+  // SAMTAL
+  if(monthConvs.length){
+    html+='<h2>Samtal ('+monthConvs.length+')</h2>';
+    monthConvs.forEach(function(cv){
+      var person=sentPeople.find(function(p){return p.id===cv.personId;});
+      var msgs=sentMsgs.filter(function(m){return m.convId===cv.id;})
+        .sort(function(a,b){return new Date(a.timestamp)-new Date(b.timestamp);});
+      html+='<div class="entry"><h3>'+esc(cv.title)+(person?' &mdash; '+esc(person.name):'')+'<span class="tag" style="margin-left:8px">'+(cv.type||"skrivande")+'</span></h3>';
+      msgs.forEach(function(m){
+        var who=m.sender==="me"?"Jag":(person?person.name:"De");
+        var cls=m.sender==="me"?"bubble-me":"bubble-them";
+        html+='<div class="sender">'+esc(who)+'</div><div class="'+cls+'">'+esc(m.text)+'</div>';
+      });
+      html+='</div>';
+    });
+  }
+
+  if(!monthLogs.length&&!monthFund.length&&!monthConvs.length){
+    html+='<p style="color:#888;padding:32px 0">Inga inlagg for '+monthName+'.</p>';
+  }
+
+  html+='</body></html>';
+
+  // Open in new window and print
+  var win=window.open("","_blank");
+  win.document.write(html);
+  win.document.close();
+  win.onload=function(){win.focus();win.print();};
+}
+
+
+// ---- NYHETER ----;
+
+function renderNyheter(){
+  var b=document.getElementById("body");
+  var html="<div style='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px'>"
+    +Object.keys(NYHETER_SITES).map(function(k){
+      var site=NYHETER_SITES[k];
+      return "<a href='"+esc(site.url)+"' target='_blank' rel='noopener' style='text-decoration:none'>"
+        +"<div style='padding:20px 16px;background:#10151f;border-radius:14px;border:1px solid #1c2733;"
+        +"text-align:center;cursor:pointer'>"
+        +"<div style='font-size:28px;margin-bottom:10px'>"+site.label.split(" ")[0]+"</div>"
+        +"<div style='font-size:14px;font-weight:600;color:#e4ecf7'>"+site.label.split(" ").slice(1).join(" ")+"</div>"
+        +"<div style='font-size:11px;color:#4a5563;margin-top:6px'>"+esc(site.url.replace(/https?:\/\//,"").replace(/\/$/,""))+"</div>"
+        +"</div></a>";
+    }).join("")
+    +"</div>";
+  b.innerHTML=html;
+}
+
+
+init();
+
+
+</script>
+</body>
+</html>
