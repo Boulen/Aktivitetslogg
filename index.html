@@ -311,7 +311,7 @@ var QUICK = {
 var CTXS = ["Van","Partner","Familj","Kollega"];
 var OTONES = ["Vanlig","Professionell","Direkt","Empatisk","Lekfull"];
 
-var logs=[], kHist=[], sHist=[], oHist=[], fHist=[], tHist=[], synHist=[], sentMsgs=[], sentPeople=[], sentConvs=[], fundHist=[], imageHist=[];
+var logs=[], kHist=[], sHist=[], oHist=[], fHist=[], tHist=[], synHist=[], sentMsgs=[], sentPeople=[], sentConvs=[], fundHist=[], imageHist=[], savedJokes=[];
 // Fritt inmatade värden (för autoifyllnadsförslag i Plats/Aktivitet/Anteckning på Aktivitet-fliken)
 var aktivitetHistory=[], platsHistory=[], anteckningHistory=[];
 // Nytt kategori-specifikt förslag för Anteckning (Aktivitet)
@@ -1580,7 +1580,7 @@ async function loadTab(tabName){
       }
     } else if(tabName==="skamt"){
       var db=await driveRead("Konversation/Skamt");
-      if(db){if(db.savedJokes)savedJokes=db.savedJokes;}
+      if(db){savedJokes=db.savedJokes||[];}
     } else if(tabName==="installningar"){
       var da=await driveRead("Installningar");
       if(da){
