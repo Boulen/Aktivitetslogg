@@ -154,7 +154,7 @@ body{background:var(--bg);min-height:100vh;font-family:'Lexend',sans-serif;color
 .dict-combined-row{max-width:637px;margin:0 auto;display:flex;align-items:center;gap:0;padding:3px 8px;}
 .dict-input-row{display:flex;align-items:center;gap:8px;}
 .dict-row-main{flex:1 1 90px;min-width:55px;margin-right:10px;}
-.dict-row-small{flex:0 1 80px;min-width:50px;gap:5px;margin-right:6px;}
+.dict-row-small{flex:0 1 120px;min-width:70px;gap:5px;margin-right:6px;}
 .dict-row-uploads{flex:0 0 auto;gap:6px;margin-right:10px;}
 .dict-row-small input{font-size:11px;padding:6px 9px;}
 .dict-row-small .action-btn{font-size:10.5px;padding:5px 9px;}
@@ -235,10 +235,11 @@ body{background:var(--bg);min-height:100vh;font-family:'Lexend',sans-serif;color
       <button class="action-btn" id="dictCameraBtn" type="button" title="Ta bild">📷</button>
     </div>
     <div class="dict-input-row dict-row-main">
-      <input type="text" id="dictInput" placeholder="Sök fras, fråga, bild eller fil …">
+      <input type="text" id="dictInput" placeholder="Sök">
     </div>
     <div class="dict-input-row dict-row-small">
-      <input type="text" id="synInput" placeholder="Ordråd …">
+      <input type="text" id="synInput" placeholder="Ord">
+      <button type="button" id="syn-to-translate-btn" class="action-btn" title="Gå till AI → Översättning">🌐</button>
     </div>
   </div>
 </div>
@@ -2026,6 +2027,13 @@ function initDictBar(){
 
   var synInput=document.getElementById("synInput");
   if(synInput)synInput.onkeydown=function(e){if(e.key==="Enter")searchSynonym();};
+
+  var synToTranslateBtn=document.getElementById("syn-to-translate-btn");
+  if(synToTranslateBtn)synToTranslateBtn.onclick=function(){
+    setView("ai");
+    aiSubview="oversattning";
+    renderAI();
+  };
 
   // Snabbkommandon: "/" -> sökrutan, "ctrl+/" (eller cmd+/ på Mac) -> Ordråd.
   // Triggar bara nar man inte redan skriver i ett annat falt.
